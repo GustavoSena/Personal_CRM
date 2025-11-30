@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { ArrowLeft, Pencil, Mail, Phone, MapPin, Linkedin, MessageSquare, AtSign } from 'lucide-react'
+import { ArrowLeft, Pencil, Mail, Phone, MapPin, Linkedin, MessageSquare, AtSign, User } from 'lucide-react'
 import { DeletePersonButton } from '@/components/DeletePersonButton'
 import { Database } from '@/lib/database.types'
 
@@ -77,6 +77,17 @@ export default async function PersonPage({ params }: PageProps) {
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
+        {person.avatar_url ? (
+          <img
+            src={person.avatar_url}
+            alt={person.name}
+            className="w-12 h-12 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+            <User className="w-6 h-6 text-blue-600 dark:text-blue-300" />
+          </div>
+        )}
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex-1">{person.name}</h1>
         <Link
           href={`/people/${person.id}/edit`}

@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           id: number
           linkedin_url: string | null
+          logo_url: string | null
           name: string
           topics: string[] | null
           website: string | null
@@ -20,6 +21,7 @@ export type Database = {
         Insert: {
           id?: never
           linkedin_url?: string | null
+          logo_url?: string | null
           name: string
           topics?: string[] | null
           website?: string | null
@@ -27,6 +29,7 @@ export type Database = {
         Update: {
           id?: never
           linkedin_url?: string | null
+          logo_url?: string | null
           name?: string
           topics?: string[] | null
           website?: string | null
@@ -86,6 +89,7 @@ export type Database = {
       }
       people: {
         Row: {
+          avatar_url: string | null
           city: string | null
           country: string | null
           email: string | null
@@ -99,6 +103,7 @@ export type Database = {
           twitter_x: string | null
         }
         Insert: {
+          avatar_url?: string | null
           city?: string | null
           country?: string | null
           email?: string | null
@@ -112,6 +117,7 @@ export type Database = {
           twitter_x?: string | null
         }
         Update: {
+          avatar_url?: string | null
           city?: string | null
           country?: string | null
           email?: string | null

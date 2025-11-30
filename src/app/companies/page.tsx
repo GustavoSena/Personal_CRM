@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { Plus, Globe, Linkedin } from 'lucide-react'
+import { Plus, Globe, Linkedin, Building2 } from 'lucide-react'
 import { TopicFilter } from '@/components/TopicFilter'
 import { Database } from '@/lib/database.types'
 
@@ -91,8 +91,19 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
               href={`/companies/${company.id}`}
               className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
             >
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex items-start gap-4">
+                {company.logo_url ? (
+                  <img
+                    src={company.logo_url}
+                    alt={company.name}
+                    className="w-12 h-12 rounded-lg object-contain border border-gray-200 dark:border-gray-600 bg-white p-1 flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-6 h-6 text-green-600 dark:text-green-300" />
+                  </div>
+                )}
+                <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     {company.name}
                   </h3>

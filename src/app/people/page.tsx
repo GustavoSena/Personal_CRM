@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { Plus, Mail, Phone, MapPin, Linkedin } from 'lucide-react'
+import { Plus, Mail, Phone, MapPin, Linkedin, User } from 'lucide-react'
 import { TopicFilter } from '@/components/TopicFilter'
 import { Database } from '@/lib/database.types'
 
@@ -91,8 +91,19 @@ export default async function PeoplePage({ searchParams }: PageProps) {
               href={`/people/${person.id}`}
               className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
             >
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex items-start gap-4">
+                {person.avatar_url ? (
+                  <img
+                    src={person.avatar_url}
+                    alt={person.name}
+                    className="w-12 h-12 rounded-full object-cover border border-gray-200 dark:border-gray-600 flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center flex-shrink-0">
+                    <User className="w-6 h-6 text-blue-600 dark:text-blue-300" />
+                  </div>
+                )}
+                <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     {person.name}
                   </h3>

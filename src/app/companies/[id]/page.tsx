@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { ArrowLeft, Pencil, Globe, Linkedin, Users } from 'lucide-react'
+import { ArrowLeft, Pencil, Globe, Linkedin, Users, Building2 } from 'lucide-react'
 import { DeleteCompanyButton } from '@/components/DeleteCompanyButton'
 import { Database } from '@/lib/database.types'
 
@@ -56,6 +56,17 @@ export default async function CompanyPage({ params }: PageProps) {
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
+        {company.logo_url ? (
+          <img
+            src={company.logo_url}
+            alt={company.name}
+            className="w-12 h-12 rounded-lg object-contain border border-gray-200 dark:border-gray-600 bg-white p-1"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
+            <Building2 className="w-6 h-6 text-green-600 dark:text-green-300" />
+          </div>
+        )}
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex-1">{company.name}</h1>
         <Link
           href={`/companies/${company.id}/edit`}

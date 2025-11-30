@@ -16,6 +16,7 @@ export function CompanyForm({ company }: CompanyFormProps) {
 
   const [formData, setFormData] = useState({
     name: company?.name ?? '',
+    logo_url: company?.logo_url ?? '',
     website: company?.website ?? '',
     linkedin_url: company?.linkedin_url ?? '',
     topics: company?.topics?.join(', ') ?? '',
@@ -28,6 +29,7 @@ export function CompanyForm({ company }: CompanyFormProps) {
 
     const data = {
       name: formData.name,
+      logo_url: formData.logo_url || null,
       website: formData.website || null,
       linkedin_url: formData.linkedin_url || null,
       topics: formData.topics
@@ -66,18 +68,45 @@ export function CompanyForm({ company }: CompanyFormProps) {
       )}
 
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
-        {/* Name */}
+        {/* Logo Preview & Name */}
+        <div className="flex gap-4 items-start">
+          {formData.logo_url && (
+            <img
+              src={formData.logo_url}
+              alt="Logo preview"
+              className="w-16 h-16 rounded-lg object-contain border border-gray-200 dark:border-gray-600 bg-white p-1"
+              onError={(e) => (e.currentTarget.style.display = 'none')}
+            />
+          )}
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Company Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+        </div>
+
+        {/* Logo URL */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Company Name <span className="text-red-500">*</span>
+            Company Logo URL
           </label>
           <input
-            type="text"
-            required
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            type="url"
+            value={formData.logo_url}
+            onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+            placeholder="https://example.com/logo.png"
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
           />
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Paste a direct link to an image (right-click image → Copy image address)
+          </p>
         </div>
 
         {/* Website */}

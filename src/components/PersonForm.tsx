@@ -16,6 +16,7 @@ export function PersonForm({ person }: PersonFormProps) {
 
   const [formData, setFormData] = useState({
     name: person?.name ?? '',
+    avatar_url: person?.avatar_url ?? '',
     email: person?.email ?? '',
     phone: person?.phone ?? '',
     linkedin_url: person?.linkedin_url ?? '',
@@ -34,6 +35,7 @@ export function PersonForm({ person }: PersonFormProps) {
 
     const data = {
       name: formData.name,
+      avatar_url: formData.avatar_url || null,
       email: formData.email || null,
       phone: formData.phone || null,
       linkedin_url: formData.linkedin_url || null,
@@ -78,18 +80,45 @@ export function PersonForm({ person }: PersonFormProps) {
       )}
 
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
-        {/* Name */}
+        {/* Avatar Preview & Name */}
+        <div className="flex gap-4 items-start">
+          {formData.avatar_url && (
+            <img
+              src={formData.avatar_url}
+              alt="Avatar preview"
+              className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
+              onError={(e) => (e.currentTarget.style.display = 'none')}
+            />
+          )}
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+        </div>
+
+        {/* Avatar URL */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Name <span className="text-red-500">*</span>
+            Profile Picture URL
           </label>
           <input
-            type="text"
-            required
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            type="url"
+            value={formData.avatar_url}
+            onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
+            placeholder="https://example.com/photo.jpg"
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
           />
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Paste a direct link to an image (right-click image → Copy image address)
+          </p>
         </div>
 
         {/* Email & Phone */}
