@@ -3,8 +3,11 @@ import Link from 'next/link'
 import { ArrowLeft, Pencil, Mail, Phone, MapPin, Linkedin, MessageSquare, AtSign, User } from 'lucide-react'
 import { DeletePersonButton } from '@/components/DeletePersonButton'
 import { AddExperienceButton } from '@/components/AddExperienceButton'
+import { AddInteractionButton } from '@/components/AddInteractionButton'
+import { SetMyProfileButton } from '@/components/SetMyProfileButton'
 import { PositionsList } from '@/components/PositionsList'
 import { getPerson, getPersonPositions, getPersonInteractions } from '@/lib/queries'
+import { formatDateForDisplay } from '@/lib/utils'
 
 export const revalidate = 0
 
@@ -36,33 +39,38 @@ export default async function PersonPage({ params }: PageProps) {
 
   return (
     <div>
-      <div className="flex items-center gap-4 mb-6">
-        <Link
-          href="/people"
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        {person.avatar_url ? (
-          <img
-            src={person.avatar_url}
-            alt={person.name}
-            className="w-12 h-12 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
-          />
-        ) : (
-          <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-            <User className="w-6 h-6 text-blue-600 dark:text-blue-300" />
-          </div>
-        )}
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex-1">{person.name}</h1>
-        <Link
-          href={`/people/${person.id}/edit`}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Pencil className="w-4 h-4 mr-2" />
-          Edit
-        </Link>
-        <DeletePersonButton id={person.id} name={person.name} />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <Link
+            href="/people"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          {person.avatar_url ? (
+            <img
+              src={person.avatar_url}
+              alt={person.name}
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
+            />
+          ) : (
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+              <User className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-300" />
+            </div>
+          )}
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{person.name}</h1>
+        </div>
+        <div className="flex items-center gap-2 sm:gap-3 sm:ml-auto flex-wrap">
+          <SetMyProfileButton personId={person.id} />
+          <Link
+            href={`/people/${person.id}/edit`}
+            className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Pencil className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Edit</span>
+          </Link>
+          <DeletePersonButton id={person.id} name={person.name} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -157,7 +165,10 @@ export default async function PersonPage({ params }: PageProps) {
 
           {/* Interactions */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Interactions</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Interactions</h2>
+              <AddInteractionButton preselectedPersonId={person.id} variant="link" />
+            </div>
             {interactions.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400 text-sm">No interactions recorded</p>
             ) : (
@@ -169,8 +180,18 @@ export default async function PersonPage({ params }: PageProps) {
                     className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                   >
                     <div className="font-medium text-gray-900 dark:text-white text-sm">{int.title}</div>
+                    {int.interaction_date && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {formatDateForDisplay(int.interaction_date)}
+                      </div>
+                    )}
                     {int.place && (
                       <div className="text-xs text-gray-500 dark:text-gray-400">{int.place}</div>
+                    )}
+                    {int.my_position && (
+                      <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                        @ {int.my_position.title} - {int.my_position.companies?.name}
+                      </div>
                     )}
                   </Link>
                 ))}

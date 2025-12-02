@@ -17,10 +17,10 @@ interface PageProps {
 }
 
 /**
- * Render the Companies page containing a header, topic filter, and company LinkedIn sync view.
+ * Render the Companies page with a header, topic filter, and LinkedIn sync view.
  *
- * @param searchParams - A promise that resolves to an object with an optional `topic` field (string | string[]). The `topic` value is used to determine which topics are selected in the filter.
- * @returns A React element that displays the page header, a TopicFilter populated from all company topics, and a CompanyLinkedInSync component showing companies filtered by the selected topics.
+ * @param searchParams - An object with an optional `topic` field used to determine selected topics; a string selects a single topic and an array selects multiple topics.
+ * @returns A React element containing the page header with action links, a TopicFilter populated from all company topics, and a CompanyLinkedInSync view showing companies filtered by the selected topics.
  */
 export default async function CompaniesPage({ searchParams }: PageProps) {
   const companies = await getCompanies()
@@ -42,22 +42,24 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Companies</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link
             href="/import/linkedin-companies"
-            className="inline-flex items-center px-4 py-2 bg-[#0077B5] text-white text-sm font-medium rounded-lg hover:bg-[#006097] transition-colors"
+            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-[#0077B5] text-white text-sm font-medium rounded-lg hover:bg-[#006097] transition-colors"
           >
-            <Import className="w-4 h-4 mr-2" />
-            Import from LinkedIn
+            <Import className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Import from LinkedIn</span>
+            <span className="sm:hidden">Import</span>
           </Link>
           <Link
             href="/companies/new"
-            className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Company
+            <Plus className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Add Company</span>
+            <span className="sm:hidden">Add</span>
           </Link>
         </div>
       </div>

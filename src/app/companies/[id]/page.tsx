@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Pencil, Globe, Linkedin, Users, Building2 } from 'lucide-react'
 import { DeleteCompanyButton } from '@/components/DeleteCompanyButton'
-import { getCompany, getCompanyPositions } from '@/lib/queries'
+import { AddInteractionButton } from '@/components/AddInteractionButton'
+import { getCompany, getCompanyPositions, getCompanyInteractions } from '@/lib/queries'
 import { formatDateForDisplay } from '@/lib/utils'
 
 export const revalidate = 0
@@ -11,6 +12,15 @@ interface PageProps {
   params: Promise<{ id: string }>
 }
 
+/**
+ * Render the company detail page for a given company id.
+ *
+ * Fetches the company record along with its positions and interactions, then renders the company overview,
+ * people, topics, and interactions UI. If no company exists for the provided id, calls `notFound()` to render a 404 page.
+ *
+ * @param params - A promise resolving to route parameters containing the `id` of the company
+ * @returns A React element containing the company detail page UI
+ */
 export default async function CompanyPage({ params }: PageProps) {
   const { id } = await params
   const company = await getCompany(id)
@@ -19,7 +29,10 @@ export default async function CompanyPage({ params }: PageProps) {
     notFound()
   }
 
-  const positions = await getCompanyPositions(id)
+  const [positions, interactions] = await Promise.all([
+    getCompanyPositions(id),
+    getCompanyInteractions(id)
+  ])
 
   return (
     <div>
@@ -121,8 +134,9 @@ export default async function CompanyPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Sidebar - Topics */}
+        {/* Sidebar */}
         <div className="space-y-6">
+          {/* Topics */}
           {company.topics && company.topics.length > 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Topics</h2>
@@ -138,6 +152,62 @@ export default async function CompanyPage({ params }: PageProps) {
               </div>
             </div>
           )}
+
+          {/* Interactions at this company */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">My Interactions</h2>
+              <AddInteractionButton preselectedCompanyId={company.id} variant="link" />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+              Interactions from when you worked here
+            </p>
+            {interactions.length === 0 ? (
+              <p className="text-gray-500 dark:text-gray-400 text-sm">No interactions recorded</p>
+            ) : (
+              <div className="space-y-2">
+                {interactions.map((int: any) => (
+                  <Link
+                    key={int.id}
+                    href={`/interactions/${int.id}`}
+                    className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    <div className="font-medium text-gray-900 dark:text-white text-sm">{int.title}</div>
+                    {int.interaction_date && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {formatDateForDisplay(int.interaction_date)}
+                      </div>
+                    )}
+                    {int.place && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{int.place}</div>
+                    )}
+                    {int.my_position && (
+                      <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                        as {int.my_position.title}
+                      </div>
+                    )}
+                    {int.interaction_people?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {int.interaction_people.slice(0, 3).map((ip: any) => (
+                          <span
+                            key={ip.person_id}
+                            className="text-xs px-1.5 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-gray-600 dark:text-gray-300"
+                          >
+                            {ip.people?.name}
+                          </span>
+                        ))}
+                        {int.interaction_people.length > 3 && (
+                          <span className="text-xs text-gray-500">
+                            +{int.interaction_people.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
