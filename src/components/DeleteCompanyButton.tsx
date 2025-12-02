@@ -10,6 +10,15 @@ interface DeleteCompanyButtonProps {
   name: string
 }
 
+/**
+ * Render a button that deletes a company by ID after user confirmation.
+ *
+ * Prompts the user with a confirmation (including a warning that positions at the company will be deleted). On confirmation, removes the company record, navigates to `/companies`, and refreshes the route. While the operation is in progress the button is disabled and shows "Deleting...". If deletion fails, an alert is shown.
+ *
+ * @param id - The numeric ID of the company to delete
+ * @param name - The company name shown in the confirmation prompt
+ * @returns A button element that triggers the delete flow when clicked
+ */
 export function DeleteCompanyButton({ id, name }: DeleteCompanyButtonProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)

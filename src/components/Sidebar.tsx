@@ -14,6 +14,14 @@ const navigation = [
   { name: 'Interactions', href: '/interactions', icon: MessageSquare },
 ]
 
+/**
+ * Renders the application sidebar containing the title, navigation links, and a sign-out control.
+ *
+ * The navigation list highlights the active route based on the current pathname and includes links for
+ * Dashboard, People, Companies, Positions, and Interactions.
+ *
+ * @returns The sidebar element containing the header, navigational links with active styling, and a sign-out area.
+ */
 export function Sidebar() {
   const pathname = usePathname()
 

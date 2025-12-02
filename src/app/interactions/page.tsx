@@ -4,6 +4,11 @@ import { Plus, MessageSquare, MapPin } from 'lucide-react'
 
 export const revalidate = 0
 
+/**
+ * Fetches all interactions ordered by descending id, including related interaction_people and each person's name.
+ *
+ * @returns An array of interaction records; each record contains its fields and an `interaction_people` array with `person_id` and a nested `people` object containing `name`. Returns an empty array if no data is available or an error occurs.
+ */
 async function getInteractions() {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
@@ -18,6 +23,11 @@ async function getInteractions() {
   return data ?? []
 }
 
+/**
+ * Render the Interactions page with a header, an "Add Interaction" action, and either an empty-state prompt or a grid of interaction cards.
+ *
+ * @returns The page content as a React node containing the header and either an empty state with an add button or a list of interaction cards (each linking to its detail page and showing title, optional place, description, and participant chips).
+ */
 export default async function InteractionsPage() {
   const interactions = await getInteractions()
 

@@ -9,6 +9,12 @@ export const revalidate = 0
 
 type Company = Database['public']['Tables']['companies']['Row']
 
+/**
+ * Fetches a single company by its id.
+ *
+ * @param id - The company id as a string; it will be parsed to an integer for the query
+ * @returns The company row matching `id`, or `null` if no company is found or an error occurs
+ */
 async function getCompany(id: string): Promise<Company | null> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
@@ -21,6 +27,12 @@ async function getCompany(id: string): Promise<Company | null> {
   return data
 }
 
+/**
+ * Fetches positions for a company including each position's related person record.
+ *
+ * @param companyId - Company identifier as a string; it will be parsed as an integer for the query
+ * @returns An array of position records where each record includes a `people` field with the associated person row; an empty array if no positions exist
+ */
 async function getCompanyPositions(companyId: string) {
   const supabase = await createServerSupabaseClient()
   const { data } = await supabase
@@ -37,6 +49,14 @@ interface PageProps {
   params: Promise<{ id: string }>
 }
 
+/**
+ * Render the company detail page showing company information, associated positions/people, and topics.
+ *
+ * If the company for the provided `id` is not found, the page triggers a 404 via `notFound()`.
+ *
+ * @param params - Route params containing `id` (string) for the requested company
+ * @returns The page's JSX: header with navigation and actions (edit/delete), a company information card, a people/positions list, and an optional topics sidebar
+ */
 export default async function CompanyPage({ params }: PageProps) {
   const { id } = await params
   const company = await getCompany(id)

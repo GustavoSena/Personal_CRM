@@ -1,5 +1,10 @@
 import { PersonForm } from '@/components/PersonForm'
 
+/**
+ * Page component that renders a header and the person creation form.
+ *
+ * @returns A JSX element containing the "Add New Person" heading and the `PersonForm` component.
+ */
 export default function NewPersonPage() {
   return (
     <div>

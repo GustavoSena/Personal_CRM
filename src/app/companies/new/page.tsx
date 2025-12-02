@@ -1,5 +1,10 @@
 import { CompanyForm } from '@/components/CompanyForm'
 
+/**
+ * Page component that renders the "Add New Company" heading and the company creation form.
+ *
+ * @returns A React element containing a heading and the CompanyForm component
+ */
 export default function NewCompanyPage() {
   return (
     <div>

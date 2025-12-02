@@ -4,6 +4,11 @@ import { Plus, Briefcase } from 'lucide-react'
 
 export const revalidate = 0
 
+/**
+ * Fetches positions including their related people and companies, ordered by `active` (descending) then `from_date` (descending).
+ *
+ * @returns An array of position records (each may include `people` and `companies` relations); returns an empty array if no data is available or an error occurs.
+ */
 async function getPositions() {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
@@ -20,6 +25,13 @@ async function getPositions() {
   return data ?? []
 }
 
+/**
+ * Renders the Positions page and its list of positions.
+ *
+ * Displays a header with an "Add Position" action. When there are no positions, shows a centered placeholder prompting the user to add one. When positions exist, shows a grid of cards where each card includes the position title, links to the related person and company, a date range (including "Present" when applicable), and an "Active" badge for active positions.
+ *
+ * @returns The React element for the Positions page.
+ */
 export default async function PositionsPage() {
   const positions = await getPositions()
 

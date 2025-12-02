@@ -15,6 +15,15 @@ const colors = {
   orange: 'bg-orange-600 hover:bg-orange-700',
 }
 
+/**
+ * Render an empty-state card that displays a message and an optional action link.
+ *
+ * @param message - The text shown inside the empty-state card.
+ * @param addHref - Optional URL to navigate to; when provided an action link is rendered.
+ * @param addLabel - Label for the action link; defaults to "Add New".
+ * @param colorScheme - Color theme for the action link; one of `blue`, `green`, `purple`, or `orange`.
+ * @returns A React element representing the empty-state card.
+ */
 export function EmptyState({ 
   message, 
   addHref, 

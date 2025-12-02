@@ -1,6 +1,12 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/**
+ * Middleware handler that enforces authentication redirects and returns a response synchronized with Supabase-managed cookies.
+ *
+ * @param request - The incoming NextRequest used to determine the current user, synchronize cookies, and compute redirects.
+ * @returns A NextResponse that is either a redirect to `/login` for unauthenticated requests, a redirect to `/` for authenticated requests visiting `/login`, or the proxied response carrying any cookies set by the Supabase client.
+ */
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,

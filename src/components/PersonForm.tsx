@@ -9,6 +9,16 @@ interface PersonFormProps {
   person?: Person
 }
 
+/**
+ * Render a form for creating a new person or editing an existing person.
+ *
+ * On submit the form creates or updates a record in the `people` table via Supabase,
+ * shows a user-visible error message if the request fails, disables the submit button while saving,
+ * and navigates to `/people` (then refreshes) after a successful operation.
+ *
+ * @param person - Optional person object used to pre-fill the form; if provided the form will update that person, otherwise it will create a new person
+ * @returns The rendered form element
+ */
 export function PersonForm({ person }: PersonFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)

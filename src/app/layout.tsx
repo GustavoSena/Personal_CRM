@@ -10,6 +10,12 @@ export const metadata: Metadata = {
   description: 'Manage your professional network',
 }
 
+/**
+ * App root layout that provides the HTML structure, applies the global font, and renders the site chrome (sidebar) with a scrollable main content area.
+ *
+ * @param children - Page content to render inside the main area
+ * @returns The root JSX element containing the `<html>` and `<body>` wrapper with layout and children
+ */
 export default function RootLayout({
   children,
 }: {

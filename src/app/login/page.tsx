@@ -5,6 +5,15 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { Mail, Lock, LogIn } from 'lucide-react'
 
+/**
+ * Renders the login/signup page and manages user authentication with Supabase.
+ *
+ * Renders a form that supports signing in and creating an account, displays error
+ * or success messages (including a "check your email" confirmation on signup),
+ * performs sign-in/sign-up requests, and navigates to the app root after a successful sign-in.
+ *
+ * @returns The React element for the login/signup page.
+ */
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')

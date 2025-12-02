@@ -10,6 +10,13 @@ interface DeletePersonButtonProps {
   name: string
 }
 
+/**
+ * Renders a button that deletes the specified person after user confirmation.
+ *
+ * @param id - The numeric id of the person to delete.
+ * @param name - The person's name shown in the confirmation prompt.
+ * @returns A button element that initiates the delete operation and displays a loading state.
+ */
 export function DeletePersonButton({ id, name }: DeletePersonButtonProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)

@@ -8,6 +8,11 @@ export const revalidate = 0
 
 type Person = Database['public']['Tables']['people']['Row']
 
+/**
+ * Fetches all records from the `people` table ordered by name.
+ *
+ * @returns An array of `Person` records from the `people` table ordered by name. Returns an empty array if no rows are found or if the fetch fails.
+ */
 async function getPeople(): Promise<Person[]> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
@@ -23,6 +28,12 @@ async function getPeople(): Promise<Person[]> {
   return data ?? []
 }
 
+/**
+ * Collects all unique skill topics from a list of people and returns them sorted.
+ *
+ * @param people - Array of people from which to extract `skills_topics`
+ * @returns A sorted array of unique skill topic strings
+ */
 function getAllTopics(people: NonNullable<Awaited<ReturnType<typeof getPeople>>>) {
   const topicsSet = new Set<string>()
   people.forEach(p => p.skills_topics?.forEach(t => topicsSet.add(t)))
@@ -33,6 +44,16 @@ interface PageProps {
   searchParams: Promise<{ topic?: string | string[] }>
 }
 
+/**
+ * Render the People directory page with optional topic-based filtering.
+ *
+ * Resolves URL search parameters to determine selected topic(s), fetches people and topics,
+ * and renders a header, topic filter, and either a grid of person cards filtered by the
+ * selected topics or an empty-state with a call-to-action.
+ *
+ * @param searchParams - A promise that resolves to URL query parameters; may include `topic` as a `string` or `string[]` used to filter results
+ * @returns The People page React element containing the header, topic filter, and the filtered list of people or an empty-state
+ */
 export default async function PeoplePage({ searchParams }: PageProps) {
   const people = await getPeople()
   const allTopics = getAllTopics(people)

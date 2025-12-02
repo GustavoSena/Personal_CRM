@@ -4,6 +4,13 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { LogOut } from 'lucide-react'
 
+/**
+ * Renders a full-width sign-out button that signs the current user out and navigates to the login page when clicked.
+ *
+ * On click, the component signs the user out from Supabase, navigates to `/login`, and refreshes the router.
+ *
+ * @returns The React element for the sign-out button
+ */
 export function SignOutButton() {
   const router = useRouter()
 

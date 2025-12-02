@@ -3,6 +3,11 @@ import { Users, Building2, Briefcase, MessageSquare } from 'lucide-react'
 
 export const revalidate = 0
 
+/**
+ * Retrieve total row counts for people, companies, positions, and interactions from the server database.
+ *
+ * @returns An object with numeric counts: `people`, `companies`, `positions`, and `interactions`; each defaults to `0` if unavailable.
+ */
 async function getStats() {
   const supabase = await createServerSupabaseClient()
   const [people, companies, positions, interactions] = await Promise.all([
@@ -20,6 +25,13 @@ async function getStats() {
   }
 }
 
+/**
+ * Render the main Dashboard page showing aggregate counts and quick actions.
+ *
+ * Displays four statistic cards (People, Companies, Positions, Interactions) and a "Quick Start" panel with links to add a person or a company.
+ *
+ * @returns A React element that renders the dashboard UI with statistic cards and quick-start actions
+ */
 export default async function Dashboard() {
   const stats = await getStats()
 

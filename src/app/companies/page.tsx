@@ -8,6 +8,13 @@ export const revalidate = 0
 
 type Company = Database['public']['Tables']['companies']['Row']
 
+/**
+ * Fetches all company rows from the database ordered by name.
+ *
+ * If a fetch error occurs (for example due to Row-Level Security) the function logs the error and returns an empty array.
+ *
+ * @returns An array of `Company` rows from the `companies` table, or an empty array if no data is available or an error occurred.
+ */
 async function getCompanies(): Promise<Company[]> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
@@ -23,6 +30,12 @@ async function getCompanies(): Promise<Company[]> {
   return data ?? []
 }
 
+/**
+ * Collects and returns all unique topic strings found on the provided companies, sorted alphabetically.
+ *
+ * @param companies - Array of company records to extract topics from
+ * @returns A sorted array of unique topic strings found across `companies`
+ */
 function getAllTopics(companies: NonNullable<Awaited<ReturnType<typeof getCompanies>>>) {
   const topicsSet = new Set<string>()
   companies.forEach(c => c.topics?.forEach(t => topicsSet.add(t)))
@@ -33,6 +46,16 @@ interface PageProps {
   searchParams: Promise<{ topic?: string | string[] }>
 }
 
+/**
+ * Render the Companies page with topic-based filtering and a grid of company cards.
+ *
+ * Fetches companies, derives available topics, resolves URL search parameters to determine selected topics,
+ * filters the company list by those topics, and renders a header, a TopicFilter control, an empty state when no
+ * companies match, or a responsive list of company cards with logo, website/LinkedIn metadata, and topic badges.
+ *
+ * @param searchParams - A promise resolving to the page's query parameters; used to read an optional `topic` param (string or string[]) to determine selected topics.
+ * @returns The rendered Companies page UI as JSX.
+ */
 export default async function CompaniesPage({ searchParams }: PageProps) {
   const companies = await getCompanies()
   const allTopics = getAllTopics(companies)

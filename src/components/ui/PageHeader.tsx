@@ -16,6 +16,18 @@ const colors = {
   orange: 'bg-orange-600 hover:bg-orange-700',
 }
 
+/**
+ * Renders a header with a title and an optional "Add" action link.
+ *
+ * The action link is shown only when `addHref` is provided; it displays a plus icon and the `addLabel`
+ * text and is styled according to `colorScheme`.
+ *
+ * @param title - The header title text to display
+ * @param addHref - Optional destination URL for the "Add" action; when omitted no action is rendered
+ * @param addLabel - Label for the action link; defaults to "Add New"
+ * @param colorScheme - Visual color scheme for the action link; one of 'blue', 'green', 'purple', or 'orange'
+ * @returns The header element containing the title and optional action link
+ */
 export function PageHeader({ 
   title, 
   addHref, 

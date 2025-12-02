@@ -9,6 +9,14 @@ interface CompanyFormProps {
   company?: Company
 }
 
+/**
+ * Render a form for creating a new company or editing an existing one.
+ *
+ * Prefills fields when a company is provided; submitting will insert or update the companies table and then navigate to the companies list.
+ *
+ * @param company - Optional company object to edit; when omitted the form operates in create mode.
+ * @returns The rendered form element for creating or updating a company.
+ */
 export function CompanyForm({ company }: CompanyFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)

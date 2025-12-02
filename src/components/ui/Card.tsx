@@ -7,6 +7,14 @@ interface CardProps {
   className?: string
 }
 
+/**
+ * Render a styled card container that becomes a navigable link when `href` is provided.
+ *
+ * @param children - Content to display inside the card.
+ * @param href - Optional destination URL; when provided the card is rendered as a link.
+ * @param className - Optional additional CSS classes appended to the card's base styles.
+ * @returns A React element representing the card; an anchor-backed element when `href` is provided, otherwise a div.
+ */
 export function Card({ children, href, className = '' }: CardProps) {
   const baseStyles = `bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 ${className}`
   
@@ -26,6 +34,13 @@ interface CardHeaderProps {
   subtitle?: string
 }
 
+/**
+ * Renders a card header with a title and optional subtitle.
+ *
+ * @param title - The header title text
+ * @param subtitle - Optional secondary text displayed beneath the title
+ * @returns The header element containing the title and, if provided, the subtitle
+ */
 export function CardHeader({ title, subtitle }: CardHeaderProps) {
   return (
     <div>

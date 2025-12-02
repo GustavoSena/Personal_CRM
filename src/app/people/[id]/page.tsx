@@ -13,6 +13,12 @@ type Position = Database['public']['Tables']['positions']['Row'] & {
 }
 type Interaction = Database['public']['Tables']['interactions']['Row']
 
+/**
+ * Fetches a person record by its numeric id.
+ *
+ * @param id - The person's id as a string containing an integer value
+ * @returns The person record if found, `null` otherwise
+ */
 async function getPerson(id: string): Promise<Person | null> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
@@ -25,6 +31,14 @@ async function getPerson(id: string): Promise<Person | null> {
   return data
 }
 
+/**
+ * Fetches all positions for a person, including each position's associated company.
+ *
+ * The results are ordered with active positions first, then by `from_date` newest to oldest.
+ *
+ * @param personId - The person's identifier as a string
+ * @returns An array of `Position` objects with their nested `company` data, or an empty array if none are found
+ */
 async function getPersonPositions(personId: string): Promise<Position[]> {
   const supabase = await createServerSupabaseClient()
   const { data } = await supabase
@@ -37,6 +51,12 @@ async function getPersonPositions(personId: string): Promise<Position[]> {
   return (data ?? []) as Position[]
 }
 
+/**
+ * Fetches interactions associated with a person by ID.
+ *
+ * @param personId - The person's ID as a string
+ * @returns An array of `Interaction` objects linked to the person; empty array if none
+ */
 async function getPersonInteractions(personId: string): Promise<Interaction[]> {
   const supabase = await createServerSupabaseClient()
   const { data } = await supabase
@@ -55,6 +75,14 @@ interface PageProps {
   params: Promise<{ id: string }>
 }
 
+/**
+ * Renders the person detail page for a given route `id`.
+ *
+ * Fetches the person record and their related positions and interactions, and renders a full detail view (contact info, notes, positions, skills/topics, and interactions). If no person is found for the provided `id`, triggers a 404 response.
+ *
+ * @param params - Promise resolving to route parameters; must contain `id`, the person identifier
+ * @returns The rendered JSX for the person detail page
+ */
 export default async function PersonPage({ params }: PageProps) {
   const { id } = await params
   const person = await getPerson(id)

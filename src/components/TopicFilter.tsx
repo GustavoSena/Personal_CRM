@@ -9,6 +9,16 @@ interface TopicFilterProps {
   colorScheme?: 'blue' | 'green'
 }
 
+/**
+ * Render a topic filter UI that lets users toggle individual topics and clear all topic filters.
+ *
+ * Updates the current URL's `topic` query parameters when a topic is toggled or when filters are cleared.
+ *
+ * @param topics - Available topic labels to render as selectable buttons
+ * @param selectedTopics - Topics that are currently selected
+ * @param colorScheme - Visual color scheme for active/inactive topic states; defaults to `'blue'`
+ * @returns The topic filter JSX element, or `null` when `topics` is an empty array
+ */
 export function TopicFilter({ topics, selectedTopics, colorScheme = 'blue' }: TopicFilterProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
