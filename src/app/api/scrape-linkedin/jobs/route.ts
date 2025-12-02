@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
-// GET /api/scrape-linkedin/jobs - List all jobs (with optional status filter)
+/**
+ * List LinkedIn scrape jobs, optionally filtering by `status`.
+ *
+ * Queries the `linkedin_scrape_jobs` table ordered by `created_at` (newest first) and returns up to 50 rows. If the `status` query parameter is present, only jobs with that status are returned.
+ *
+ * @returns A JSON response containing `jobs` (an array of job records) on success; on failure returns a JSON object with an `error` message and HTTP 500 status.
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)

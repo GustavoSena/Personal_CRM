@@ -21,6 +21,12 @@ interface ScrapeJobsContextType {
 
 const ScrapeJobsContext = createContext<ScrapeJobsContextType | null>(null)
 
+/**
+ * Retrieves the current ScrapeJobsContext value for accessing scrape job state and actions.
+ *
+ * @returns The context value containing `jobs`, `pendingCount`, `addJob`, `removeJob`, and `refreshJobs`.
+ * @throws If invoked outside a `ScrapeJobsProvider`.
+ */
 export function useScrapeJobs() {
   const context = useContext(ScrapeJobsContext)
   if (!context) {
@@ -33,6 +39,15 @@ interface ScrapeJobsProviderProps {
   children: ReactNode
 }
 
+/**
+ * Provides ScrapeJobsContext to descendant components and manages scrape job lifecycle.
+ *
+ * Exposes the current list of scrape jobs, a count of jobs that are pending or processing,
+ * and the actions `addJob`, `removeJob`, and `refreshJobs`. It also polls the server for
+ * status updates of pending/processing jobs and updates job entries with status, result, and error.
+ *
+ * @returns The provider element that supplies scrape job state and actions to its children.
+ */
 export function ScrapeJobsProvider({ children }: ScrapeJobsProviderProps) {
   const [jobs, setJobs] = useState<ScrapeJob[]>([])
 

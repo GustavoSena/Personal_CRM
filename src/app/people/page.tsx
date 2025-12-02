@@ -33,6 +33,14 @@ interface PageProps {
   searchParams: Promise<{ topic?: string | string[] }>
 }
 
+/**
+ * Renders the People page with topic filtering, import/add actions, and a list of person cards.
+ *
+ * Displays a topic filter, action buttons for importing from LinkedIn and adding a person, and a grid or empty state depending on filtered results. Selected topics from `searchParams` are used to filter the people shown.
+ *
+ * @param searchParams - A promise resolving to an object that may contain `topic` (a string or array of strings) representing selected topic(s) from the URL query.
+ * @returns The page React element containing the people list, filters, and action controls.
+ */
 export default async function PeoplePage({ searchParams }: PageProps) {
   const people = await getPeople()
   const allTopics = getAllTopics(people)

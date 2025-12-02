@@ -24,6 +24,19 @@ interface EditPositionModalProps {
   onDeleted: () => void
 }
 
+/**
+ * Modal UI for editing an existing job position, including saving updates and deleting the position.
+ *
+ * Renders a form with company (read-only), editable position title, optional duration, date range, and a toggle for current/active status. Validates that the title is not empty, persists changes to the backend when saved, and supports a two-step delete confirmation before removing the position.
+ *
+ * @param props.position - Position record to edit; form fields are initialized from this object and synchronized when it changes.
+ * @param props.companyName - Display name of the company associated with the position (read-only).
+ * @param props.isOpen - When false, the component renders nothing.
+ * @param props.onClose - Callback invoked when the modal is closed (cancel, successful save, or after delete).
+ * @param props.onSaved - Callback invoked after a successful save operation.
+ * @param props.onDeleted - Callback invoked after a successful delete operation.
+ * @returns The modal element when open, or `null` when closed.
+ */
 export function EditPositionModal({ 
   position, 
   companyName,

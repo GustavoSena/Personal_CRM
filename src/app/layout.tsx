@@ -11,6 +11,15 @@ export const metadata: Metadata = {
   description: 'Manage your professional network',
 }
 
+/**
+ * Root layout component that provides the app's global HTML structure and context.
+ *
+ * Renders the HTML and body elements, wraps content with application providers, displays
+ * the persistent sidebar, and places `children` into the main scrollable content area.
+ *
+ * @param children - Content to render inside the main content area of the layout.
+ * @returns The root HTML element containing providers, sidebar, and main content.
+ */
 export default function RootLayout({
   children,
 }: {

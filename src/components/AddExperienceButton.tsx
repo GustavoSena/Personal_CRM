@@ -9,6 +9,12 @@ interface AddExperienceButtonProps {
   personId: number
 }
 
+/**
+ * Renders an "Add Experience" button that opens a modal for adding work experience for a specific person.
+ *
+ * @param personId - The ID of the person to associate the new experience with
+ * @returns The component markup containing the button and the AddExperienceModal
+ */
 export function AddExperienceButton({ personId }: AddExperienceButtonProps) {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)

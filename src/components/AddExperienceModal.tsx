@@ -18,7 +18,16 @@ interface AddExperienceModalProps {
   onSaved: () => void
 }
 
-// Extract a stable company slug from different LinkedIn URL variants
+/**
+ * Extracts a stable LinkedIn company slug from various company URL formats.
+ *
+ * Parses the provided LinkedIn company URL (or URL-like string) and returns the canonical slug
+ * for the company in lowercase. Handles URLs with or without an explicit scheme and supports
+ * paths that include a `/company/<slug>` segment or use the final path segment as the slug.
+ *
+ * @param rawUrl - The LinkedIn company URL or URL-like string to extract the slug from
+ * @returns The company slug in lowercase, or `null` if a slug cannot be determined
+ */
 function getCompanySlug(rawUrl: string | null | undefined): string | null {
   if (!rawUrl) return null
   let url = rawUrl.trim()
@@ -42,6 +51,17 @@ function getCompanySlug(rawUrl: string | null | undefined): string | null {
   }
 }
 
+/**
+ * Modal UI for adding a work experience entry for a person.
+ *
+ * Allows selecting an existing company or creating one from a LinkedIn company URL, entering position details, and saving the position.
+ *
+ * @param personId - ID of the person the position will be associated with
+ * @param isOpen - Controls whether the modal is visible
+ * @param onClose - Called when the modal is dismissed (cancels any in-progress input)
+ * @param onSaved - Called after a position is successfully saved
+ * @returns A modal element for adding experience when `isOpen` is true, or `null` when closed
+ */
 export function AddExperienceModal({ personId, isOpen, onClose, onSaved }: AddExperienceModalProps) {
   const [mode, setMode] = useState<'search' | 'linkedin'>('search')
   const [searchQuery, setSearchQuery] = useState('')

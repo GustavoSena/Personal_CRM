@@ -31,6 +31,17 @@ export interface ParsedLinkedInProfile {
   rawContent: string
 }
 
+/**
+ * Parse a LinkedIn-style markdown profile into structured person and company position data.
+ *
+ * Extracts the person's name, headline, location, avatar URL, and an "About" snippet, and parses an
+ * Experience section and inline LinkedIn company links into up to 10 deduplicated positions.
+ *
+ * @param markdown - The profile content in Markdown format to parse
+ * @param url - The source URL of the profile (used for context when parsing)
+ * @returns The parsed profile containing `person` (name, headline, location, avatarUrl, about),
+ *          `positions` (array of deduplicated LinkedInPosition objects, up to 10), and `rawContent`
+ */
 export function parseLinkedInProfile(markdown: string, url: string): ParsedLinkedInProfile {
   // Extract name - usually appears as "# Name" or in the title
   const nameMatch = markdown.match(/^#\s+([^\n]+)/m) || 
@@ -137,7 +148,12 @@ export function parseLinkedInProfile(markdown: string, url: string): ParsedLinke
   }
 }
 
-// Extract company info from a company LinkedIn page
+/**
+ * Parse basic company details from LinkedIn company page markdown.
+ *
+ * @param markdown - Markdown text of a LinkedIn company page
+ * @returns An object containing the company `name`, `linkedinUrl` (always `null`), `website` (extracted URL or `null`), and `logoUrl` (extracted logo URL or `null`)
+ */
 export function parseLinkedInCompany(markdown: string): LinkedInCompany {
   const nameMatch = markdown.match(/^#\s+([^\n|]+)/m)
   const name = nameMatch ? nameMatch[1].trim() : 'Unknown Company'

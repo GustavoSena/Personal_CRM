@@ -28,6 +28,14 @@ interface PositionsListProps {
   positions: Position[]
 }
 
+/**
+ * Render a list of positions with company details, tenure, and inline editing.
+ *
+ * Each item displays a company logo (or placeholder), the position title, an optional link to the company, duration or date range, an edit button that opens an edit modal for that position, and an "Active" badge when applicable. If `positions` is empty, renders a placeholder message.
+ *
+ * @param positions - The array of positions to display
+ * @returns The rendered list of positions as a JSX element
+ */
 export function PositionsList({ positions }: PositionsListProps) {
   const router = useRouter()
   const [editingPosition, setEditingPosition] = useState<Position | null>(null)

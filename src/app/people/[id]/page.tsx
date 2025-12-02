@@ -57,6 +57,15 @@ interface PageProps {
   params: Promise<{ id: string }>
 }
 
+/**
+ * Render the person detail page for the person identified by route params.
+ *
+ * Renders contact information, notes, positions, skills/topics, and interactions for the specified person.
+ * If the person cannot be found, triggers a 404 via `notFound()`.
+ *
+ * @param params - Route parameters containing the `id` of the person to display.
+ * @returns The rendered person detail page as a JSX element.
+ */
 export default async function PersonPage({ params }: PageProps) {
   const { id } = await params
   const person = await getPerson(id)

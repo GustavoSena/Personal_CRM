@@ -20,7 +20,12 @@ interface CompanyLinkedInSyncProps {
   companies: Company[]
 }
 
-// Extract a stable company slug from different LinkedIn URL variants
+/**
+ * Extracts a stable LinkedIn company slug from a LinkedIn URL or host/path.
+ *
+ * @param rawUrl - The LinkedIn URL, host, or path to extract the company slug from; may be `null` or `undefined`.
+ * @returns The company slug in lowercase when found, or `null` if no slug can be determined. If the input cannot be parsed as a URL, returns a lowercased fallback string with any query removed and a trailing slash trimmed.
+ */
 function getCompanySlug(rawUrl: string | null | undefined): string | null {
   if (!rawUrl) return null
   let url = rawUrl.trim()
@@ -51,6 +56,17 @@ function getCompanySlug(rawUrl: string | null | undefined): string | null {
   }
 }
 
+/**
+ * Render a UI for viewing, selecting, and queuing LinkedIn data syncs for a set of companies.
+ *
+ * Displays companies, highlights those that need an update (have a LinkedIn URL but no logo), and
+ * provides controls to select items, trigger an asynchronous LinkedIn scrape job, and monitor
+ * background processing. When a queued job completes, matching company records are updated with
+ * scraped fields (logo, website, canonical LinkedIn URL).
+ *
+ * @param companies - Array of Company objects to display and operate on
+ * @returns The component UI for managing LinkedIn syncs and showing status, selection, and results
+ */
 export function CompanyLinkedInSync({ companies }: CompanyLinkedInSyncProps) {
   const router = useRouter()
   const { jobs, addJob } = useScrapeJobs()

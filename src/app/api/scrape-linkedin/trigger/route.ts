@@ -4,6 +4,17 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 const PROFILE_DATASET_ID = 'gd_l1viktl72bvl7bjuj0'
 const COMPANY_DATASET_ID = 'gd_l1vikfnt1wgvvqz95w'
 
+/**
+ * Trigger a Bright Data scrape for one or more LinkedIn URLs and record a pending job in Supabase.
+ *
+ * Accepts a JSON body with either `url` (string) or `urls` (string[]) and an optional `type` ("profile" or "company"; defaults to "profile").
+ * Filters provided URLs to include only those containing "linkedin.com", caps the batch at 20 URLs, and uses BRIGHTDATA_API_KEY to trigger a Bright Data dataset run.
+ *
+ * @param request - Incoming NextRequest whose JSON body should include `{ url?: string, urls?: string[], type?: 'profile' | 'company' }`
+ * @returns Response JSON. On success: `{ job_id: string, snapshot_id: string, status: 'pending', url_count: number }`.  
+ * If the database insert fails: `{ job_id: null, snapshot_id: string, status: 'pending', message: string }`.  
+ * On error or invalid input: `{ error: string }`.
+ */
 export async function POST(request: NextRequest) {
   try {
     const { url, urls, type = 'profile' } = await request.json()
