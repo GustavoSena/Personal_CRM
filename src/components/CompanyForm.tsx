@@ -9,6 +9,29 @@ interface CompanyFormProps {
   company?: Company
 }
 
+function getCompanySlug(rawUrl: string | null | undefined): string | null {
+  if (!rawUrl) return null
+  let url = rawUrl.trim()
+  if (!url) return null
+
+  if (!/^https?:\/\//i.test(url)) {
+    url = `https://${url}`
+  }
+
+  try {
+    const u = new URL(url)
+    const segments = u.pathname.split('/').filter(Boolean)
+    if (segments.length === 0) return null
+
+    const companyIndex = segments.findIndex((seg) => seg.toLowerCase() === 'company')
+    const slug = companyIndex >= 0 ? segments[companyIndex + 1] : segments[segments.length - 1]
+
+    return slug ? slug.toLowerCase() : null
+  } catch {
+    return url.toLowerCase().replace(/\?.*$/, '').replace(/\/$/, '')
+  }
+}
+
 export function CompanyForm({ company }: CompanyFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -27,11 +50,18 @@ export function CompanyForm({ company }: CompanyFormProps) {
     setLoading(true)
     setError(null)
 
+    const slug = getCompanySlug(formData.linkedin_url || null)
+    const canonicalLinkedInUrl = formData.linkedin_url
+      ? slug
+        ? `https://www.linkedin.com/company/${slug}`
+        : formData.linkedin_url.trim()
+      : null
+
     const data = {
       name: formData.name,
       logo_url: formData.logo_url || null,
       website: formData.website || null,
-      linkedin_url: formData.linkedin_url || null,
+      linkedin_url: canonicalLinkedInUrl,
       topics: formData.topics
         ? formData.topics.split(',').map((s) => s.trim()).filter(Boolean)
         : null,

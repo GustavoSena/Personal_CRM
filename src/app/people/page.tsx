@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { Plus, Mail, Phone, MapPin, Linkedin, User } from 'lucide-react'
+import { Plus, Mail, Phone, MapPin, Linkedin, User, Import } from 'lucide-react'
 import { TopicFilter } from '@/components/TopicFilter'
 import { Database } from '@/lib/database.types'
 
@@ -55,13 +55,22 @@ export default async function PeoplePage({ searchParams }: PageProps) {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">People</h1>
-        <Link
-          href="/people/new"
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Person
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/import/linkedin"
+            className="inline-flex items-center px-4 py-2 bg-[#0077B5] text-white text-sm font-medium rounded-lg hover:bg-[#006097] transition-colors"
+          >
+            <Import className="w-4 h-4 mr-2" />
+            Import from LinkedIn
+          </Link>
+          <Link
+            href="/people/new"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Person
+          </Link>
+        </div>
       </div>
 
       <TopicFilter topics={allTopics} selectedTopics={selectedTopics} colorScheme="blue" />

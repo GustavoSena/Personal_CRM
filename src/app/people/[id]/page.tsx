@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { ArrowLeft, Pencil, Mail, Phone, MapPin, Linkedin, MessageSquare, AtSign, User } from 'lucide-react'
 import { DeletePersonButton } from '@/components/DeletePersonButton'
+import { AddExperienceButton } from '@/components/AddExperienceButton'
+import { PositionsList } from '@/components/PositionsList'
 import { Database } from '@/lib/database.types'
 
 export const revalidate = 0
@@ -162,31 +164,11 @@ export default async function PersonPage({ params }: PageProps) {
 
           {/* Positions */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Positions</h2>
-            {positions.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400">No positions recorded</p>
-            ) : (
-              <div className="space-y-4">
-                {positions.map((pos: any) => (
-                  <div key={pos.id} className="flex items-start gap-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900 dark:text-white">{pos.title}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {pos.companies?.name}
-                        {pos.from_date && ` • ${pos.from_date}`}
-                        {pos.until_date && ` - ${pos.until_date}`}
-                        {pos.active && !pos.until_date && ' - Present'}
-                      </div>
-                    </div>
-                    {pos.active && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                        Active
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Positions</h2>
+              <AddExperienceButton personId={person.id} />
+            </div>
+            <PositionsList positions={positions} />
           </div>
         </div>
 

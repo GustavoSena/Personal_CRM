@@ -136,6 +136,7 @@ export type Database = {
         Row: {
           active: boolean
           company_id: number
+          duration: string | null
           from_date: string | null
           id: number
           person_id: number
@@ -145,6 +146,7 @@ export type Database = {
         Insert: {
           active?: boolean
           company_id: number
+          duration?: string | null
           from_date?: string | null
           id?: never
           person_id: number
@@ -154,6 +156,7 @@ export type Database = {
         Update: {
           active?: boolean
           company_id?: number
+          duration?: string | null
           from_date?: string | null
           id?: never
           person_id?: number
@@ -176,6 +179,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      linkedin_scrape_jobs: {
+        Row: {
+          id: string
+          type: string
+          urls: string[]
+          snapshot_id: string
+          status: string
+          result: Json | null
+          error_message: string | null
+          created_at: string
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          type: string
+          urls: string[]
+          snapshot_id: string
+          status?: string
+          result?: Json | null
+          error_message?: string | null
+          created_at?: string
+          completed_at?: string | null
+        }
+        Update: {
+          id?: string
+          type?: string
+          urls?: string[]
+          snapshot_id?: string
+          status?: string
+          result?: Json | null
+          error_message?: string | null
+          created_at?: string
+          completed_at?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -203,3 +242,4 @@ export type Company = Tables<'companies'>
 export type Position = Tables<'positions'>
 export type Interaction = Tables<'interactions'>
 export type InteractionPerson = Tables<'interaction_people'>
+export type LinkedInScrapeJob = Tables<'linkedin_scrape_jobs'>

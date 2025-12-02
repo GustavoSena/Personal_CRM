@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { Plus, Briefcase } from 'lucide-react'
+import { Plus } from 'lucide-react'
+import { PositionsPageList } from '@/components/PositionsPageList'
 
 export const revalidate = 0
 
@@ -48,43 +49,7 @@ export default async function PositionsPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {positions.map((position: any) => (
-            <div
-              key={position.id}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                    <Briefcase className="w-5 h-5 text-purple-600 dark:text-purple-300" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{position.title}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      <Link href={`/people/${position.person_id}`} className="hover:text-blue-600">
-                        {position.people?.name}
-                      </Link>
-                      {' at '}
-                      <Link href={`/companies/${position.company_id}`} className="hover:text-blue-600">
-                        {position.companies?.name}
-                      </Link>
-                    </p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500">
-                      {position.from_date && `From ${position.from_date}`}
-                      {position.until_date ? ` to ${position.until_date}` : position.active ? ' - Present' : ''}
-                    </p>
-                  </div>
-                </div>
-                {position.active && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                    Active
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <PositionsPageList positions={positions} />
       )}
     </div>
   )
