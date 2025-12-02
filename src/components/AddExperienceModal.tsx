@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { X, Search, Loader2, Building2, Plus, ExternalLink } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { PositionDateInput } from '@/components/PositionDateInput'
+import { getCompanySlug } from '@/lib/utils'
 
 interface Company {
   id: number
@@ -19,38 +20,7 @@ interface AddExperienceModalProps {
   onSaved: () => void
 }
 
-/**
- * Extracts a stable LinkedIn company slug from various company URL formats.
- *
- * Parses the provided LinkedIn company URL (or URL-like string) and returns the canonical slug
- * for the company in lowercase. Handles URLs with or without an explicit scheme and supports
- * paths that include a `/company/<slug>` segment or use the final path segment as the slug.
- *
- * @param rawUrl - The LinkedIn company URL or URL-like string to extract the slug from
- * @returns The company slug in lowercase, or `null` if a slug cannot be determined
- */
-function getCompanySlug(rawUrl: string | null | undefined): string | null {
-  if (!rawUrl) return null
-  let url = rawUrl.trim()
-  if (!url) return null
 
-  if (!/^https?:\/\//i.test(url)) {
-    url = `https://${url}`
-  }
-
-  try {
-    const u = new URL(url)
-    const segments = u.pathname.split('/').filter(Boolean)
-    if (segments.length === 0) return null
-
-    const companyIndex = segments.findIndex((seg) => seg.toLowerCase() === 'company')
-    const slug = companyIndex >= 0 ? segments[companyIndex + 1] : segments[segments.length - 1]
-
-    return slug ? slug.toLowerCase() : null
-  } catch {
-    return url.toLowerCase().replace(/\?.*$/, '').replace(/\/$/, '')
-  }
-}
 
 /**
  * Modal UI for adding a work experience entry for a person.

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Search, Loader2, CheckCircle2, Building2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { parseLinkedInCompanyUrls } from '@/lib/utils'
+import { getCompanySlug, parseLinkedInCompanyUrls } from '@/lib/utils'
 
 interface ScrapedCompany {
   name: string
@@ -18,31 +18,7 @@ interface ScrapedCompany {
   existingId?: number
 }
 
-/**
- * Derives a canonical lowercase slug for a LinkedIn company URL.
- */
-function getCompanySlug(rawUrl: string | null | undefined): string | null {
-  if (!rawUrl) return null
-  let url = rawUrl.trim()
-  if (!url) return null
 
-  if (!/^https?:\/\//i.test(url)) {
-    url = `https://${url}`
-  }
-
-  try {
-    const u = new URL(url)
-    const segments = u.pathname.split('/').filter(Boolean)
-    if (segments.length === 0) return null
-
-    const companyIndex = segments.findIndex((seg) => seg.toLowerCase() === 'company')
-    const slug = companyIndex >= 0 ? segments[companyIndex + 1] : segments[segments.length - 1]
-
-    return slug ? slug.toLowerCase() : null
-  } catch {
-    return url.toLowerCase().replace(/\?.*$/, '').replace(/\/$/, '')
-  }
-}
 
 /**
  * Page component for bulk importing companies from LinkedIn URLs.

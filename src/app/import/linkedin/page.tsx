@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Search, Loader2, ChevronRight, CheckCircle2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { parseLinkedInProfileUrls } from '@/lib/utils'
+import { getCompanySlug, getLinkedInProfileSlug, parseLinkedInProfileUrls } from '@/lib/utils'
 
 interface ScrapedPerson {
   name: string
@@ -38,67 +38,6 @@ interface ExistingCompany {
   id: number
   name: string
   linkedin_url: string | null
-}
-
-/**
- * Normalize a LinkedIn profile URL into a stable slug.
- *
- * @param rawUrl - The LinkedIn profile URL (or `null`/`undefined`)
- * @returns The lowercase profile slug extracted from `rawUrl`, or `null` if a slug cannot be determined
- */
-function getLinkedInProfileSlug(rawUrl: string | null | undefined): string | null {
-  if (!rawUrl) return null
-  let url = rawUrl.trim()
-  if (!url) return null
-
-  if (!/^https?:\/\//i.test(url)) {
-    url = `https://${url}`
-  }
-
-  try {
-    const u = new URL(url)
-    const segments = u.pathname.split('/').filter(Boolean)
-    if (segments.length === 0) return null
-
-    const inIndex = segments.findIndex((seg) => seg.toLowerCase() === 'in')
-    const slug = inIndex >= 0 ? segments[inIndex + 1] : segments[segments.length - 1]
-
-    return slug ? slug.toLowerCase() : null
-  } catch {
-    return url.toLowerCase().replace(/\?.*$/, '').replace(/\/$/, '')
-  }
-}
-
-/**
- * Derives a canonical lowercase slug for a LinkedIn company URL.
- *
- * Accepts full or partial URLs (with or without scheme) and extracts the company identifier
- * from the path (preferring the segment after `company` when present).
- *
- * @param rawUrl - The company URL or identifier string; may be null or undefined.
- * @returns The company slug in lowercase, or `null` if no slug can be determined. For malformed URLs, returns a cleaned, lowercased version of the input with the query removed and any trailing slash trimmed.
- */
-function getCompanySlug(rawUrl: string | null | undefined): string | null {
-  if (!rawUrl) return null
-  let url = rawUrl.trim()
-  if (!url) return null
-
-  if (!/^https?:\/\//i.test(url)) {
-    url = `https://${url}`
-  }
-
-  try {
-    const u = new URL(url)
-    const segments = u.pathname.split('/').filter(Boolean)
-    if (segments.length === 0) return null
-
-    const companyIndex = segments.findIndex((seg) => seg.toLowerCase() === 'company')
-    const slug = companyIndex >= 0 ? segments[companyIndex + 1] : segments[segments.length - 1]
-
-    return slug ? slug.toLowerCase() : null
-  } catch {
-    return url.toLowerCase().replace(/\?.*$/, '').replace(/\/$/, '')
-  }
 }
 
 /**

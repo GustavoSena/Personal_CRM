@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { RefreshCw, Building2, Globe, Linkedin, Check, AlertCircle, Loader2, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useScrapeJobs } from '@/contexts/ScrapeJobsContext'
+import { getCompanySlug } from '@/lib/utils'
 
 interface Company {
   id: number
@@ -20,41 +21,6 @@ interface CompanyLinkedInSyncProps {
   companies: Company[]
 }
 
-/**
- * Extracts a stable LinkedIn company slug from a LinkedIn URL or host/path.
- *
- * @param rawUrl - The LinkedIn URL, host, or path to extract the company slug from; may be `null` or `undefined`.
- * @returns The company slug in lowercase when found, or `null` if no slug can be determined. If the input cannot be parsed as a URL, returns a lowercased fallback string with any query removed and a trailing slash trimmed.
- */
-function getCompanySlug(rawUrl: string | null | undefined): string | null {
-  if (!rawUrl) return null
-  let url = rawUrl.trim()
-  if (!url) return null
-
-  if (!/^https?:\/\//i.test(url)) {
-    url = `https://${url}`
-  }
-
-  try {
-    const u = new URL(url)
-    // Drop query/hash, work only with path
-    const segments = u.pathname.split('/').filter(Boolean)
-    if (segments.length === 0) return null
-
-    const companyIndex = segments.findIndex(
-      (seg) => seg.toLowerCase() === 'company'
-    )
-
-    const slug = companyIndex >= 0
-      ? segments[companyIndex + 1]
-      : segments[segments.length - 1]
-
-    return slug ? slug.toLowerCase() : null
-  } catch {
-    // Fallback: strip query and trailing slash
-    return url.toLowerCase().replace(/\?.*$/, '').replace(/\/$/, '')
-  }
-}
 
 /**
  * Render a UI for viewing, selecting, and queuing LinkedIn data syncs for a set of companies.

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, Search, Loader2, User, Building2, Plus, ExternalLink, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { PositionDateInput } from '@/components/PositionDateInput'
+import { getCompanySlug, getLinkedInProfileSlug } from '@/lib/utils'
 
 interface Person {
   id: number
@@ -36,63 +37,6 @@ export default function NewPositionPage() {
   )
 }
 
-/**
- * Extracts a normalized LinkedIn profile slug from a URL or path.
- */
-function getLinkedInProfileSlug(rawUrl: string | null | undefined): string | null {
-  if (!rawUrl) return null
-  let url = rawUrl.trim()
-  if (!url) return null
-
-  if (!/^https?:\/\//i.test(url)) {
-    url = `https://${url}`
-  }
-
-  try {
-    const u = new URL(url)
-    const segments = u.pathname.split('/').filter(Boolean)
-    if (segments.length === 0) return null
-
-    const profileIndex = segments.findIndex((seg) => seg.toLowerCase() === 'in')
-    const slug = profileIndex >= 0 ? segments[profileIndex + 1] : segments[segments.length - 1]
-
-    return slug ? slug.toLowerCase() : null
-  } catch {
-    return url.toLowerCase().replace(/\?.*$/, '').replace(/\/$/, '')
-  }
-}
-
-/**
- * Extracts a stable LinkedIn company slug from various company URL formats.
- *
- * Derives the slug from the path segment following `company` when present, otherwise from the last path segment;
- * normalizes the result to lowercase. Returns `null` for empty, invalid, or unparsable input.
- *
- * @param rawUrl - A company LinkedIn URL or partial URL (may omit scheme)
- * @returns The extracted company slug in lowercase, or `null` on failure
- */
-function getCompanySlug(rawUrl: string | null | undefined): string | null {
-  if (!rawUrl) return null
-  let url = rawUrl.trim()
-  if (!url) return null
-
-  if (!/^https?:\/\//i.test(url)) {
-    url = `https://${url}`
-  }
-
-  try {
-    const u = new URL(url)
-    const segments = u.pathname.split('/').filter(Boolean)
-    if (segments.length === 0) return null
-
-    const companyIndex = segments.findIndex((seg) => seg.toLowerCase() === 'company')
-    const slug = companyIndex >= 0 ? segments[companyIndex + 1] : segments[segments.length - 1]
-
-    return slug ? slug.toLowerCase() : null
-  } catch {
-    return url.toLowerCase().replace(/\?.*$/, '').replace(/\/$/, '')
-  }
-}
 
 /**
  * Renders the "Add Position" page content that lets the user create a new position and associate it with a person and a company.

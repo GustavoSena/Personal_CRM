@@ -4,38 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Company } from '@/lib/database.types'
 import { supabase } from '@/lib/supabase'
+import { getCompanySlug } from '@/lib/utils'
 
 interface CompanyFormProps {
   company?: Company
-}
-
-/**
- * Derives a normalized company slug from a LinkedIn URL-like string.
- *
- * @param rawUrl - A LinkedIn URL, partial URL, pathname, or null/undefined.
- * @returns The company slug lowercased when one can be determined (the segment after `company` in the path, or the last path segment), or `null` if no slug is present. If URL parsing fails, returns the input lowercased with its query string and trailing slash removed.
- */
-function getCompanySlug(rawUrl: string | null | undefined): string | null {
-  if (!rawUrl) return null
-  let url = rawUrl.trim()
-  if (!url) return null
-
-  if (!/^https?:\/\//i.test(url)) {
-    url = `https://${url}`
-  }
-
-  try {
-    const u = new URL(url)
-    const segments = u.pathname.split('/').filter(Boolean)
-    if (segments.length === 0) return null
-
-    const companyIndex = segments.findIndex((seg) => seg.toLowerCase() === 'company')
-    const slug = companyIndex >= 0 ? segments[companyIndex + 1] : segments[segments.length - 1]
-
-    return slug ? slug.toLowerCase() : null
-  } catch {
-    return url.toLowerCase().replace(/\?.*$/, '').replace(/\/$/, '')
-  }
 }
 
 /**
