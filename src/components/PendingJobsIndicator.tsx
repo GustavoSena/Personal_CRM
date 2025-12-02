@@ -4,6 +4,14 @@ import { useState } from 'react'
 import { Loader2, Check, AlertCircle, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { useScrapeJobs } from '@/contexts/ScrapeJobsContext'
 
+/**
+ * Render a floating indicator with an expandable panel that summarizes LinkedIn scrape jobs.
+ *
+ * The indicator shows a compact summary (pending spinner or completed check) and toggles an expanded list of jobs.
+ * The expanded panel lists each job with status, type, URL count, optional results or error, and an optional remove action for completed/failed jobs.
+ *
+ * @returns The rendered indicator element when there are jobs, or `null` when no jobs exist.
+ */
 export function PendingJobsIndicator() {
   const { jobs, pendingCount, removeJob } = useScrapeJobs()
   const [expanded, setExpanded] = useState(false)

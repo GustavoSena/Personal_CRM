@@ -1,7 +1,13 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// Validate environment variables at module initialization
+/**
+ * Retrieve the value of a required environment variable.
+ *
+ * @param name - The environment variable name to read from process.env
+ * @returns The environment variable value
+ * @throws Error if the environment variable is not defined; message suggests adding it to `.env.local` or the deployment environment
+ */
 function getRequiredEnvVar(name: string): string {
   const value = process.env[name]
   if (!value) {
@@ -16,6 +22,16 @@ function getRequiredEnvVar(name: string): string {
 const SUPABASE_URL = getRequiredEnvVar('NEXT_PUBLIC_SUPABASE_URL')
 const SUPABASE_ANON_KEY = getRequiredEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY')
 
+/**
+ * Proxy middleware that attaches a Supabase server client (using request cookies) and enforces authentication-based redirects.
+ *
+ * Creates a Supabase server client tied to the incoming request's cookies, checks the authenticated user, and:
+ * - redirects unauthenticated requests to `/login` (except requests already targeting `/login`),
+ * - redirects authenticated requests away from `/login` to `/`.
+ *
+ * @param request - The incoming NextRequest; used for cookie management and request path inspection.
+ * @returns A NextResponse that either continues processing the original request or is a redirect to `/login` or `/` based on authentication state.
+ */
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,

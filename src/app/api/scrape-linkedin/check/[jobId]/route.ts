@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
+/**
+ * Checks the status of a LinkedIn scrape job and returns its current state or results.
+ *
+ * Calls Bright Data to inspect the job's snapshot, updates the job record in Supabase when the snapshot completes or fails, and returns a JSON payload describing the job state.
+ *
+ * @param request - The incoming NextRequest (unused beyond context)
+ * @param params - A promise resolving to route parameters; must include `jobId` (the scrape job id)
+ * @returns A JSON object with `job_id` and `status`. If `status` is `"completed"`, includes `result` (an array of snapshot results). If `status` is `"failed"`, includes `error` (error message). If the job is still being processed, returns only `job_id` and `status` (`"processing"`). Returns HTTP 404 when the job is not found and HTTP 500 for configuration or internal errors.
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> }

@@ -21,6 +21,13 @@ async function getPositions() {
   return data ?? []
 }
 
+/**
+ * Server-rendered page that displays positions and provides controls to add a new position.
+ *
+ * Renders a page header with an "Add Position" action. When there are no positions, shows an empty-state card with a call-to-action to create one; when positions exist, renders the positions list component.
+ *
+ * @returns The page's React element containing the header, add button, and either the empty-state prompt or the positions list.
+ */
 export default async function PositionsPage() {
   const positions = await getPositions()
 

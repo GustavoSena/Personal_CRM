@@ -34,6 +34,12 @@ interface PositionsPageListProps {
   positions: Position[]
 }
 
+/**
+ * Renders a list of position cards showing title, person and company links, dates/duration, and an inline edit control.
+ *
+ * @param positions - Array of position objects to display
+ * @returns The rendered list of position cards as a React node, or `null` when `positions` is empty
+ */
 export function PositionsPageList({ positions }: PositionsPageListProps) {
   const router = useRouter()
   const [editingPosition, setEditingPosition] = useState<Position | null>(null)

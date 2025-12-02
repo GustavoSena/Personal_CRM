@@ -39,7 +39,12 @@ interface ExistingCompany {
   linkedin_url: string | null
 }
 
-// Normalize LinkedIn profile URLs to a stable slug
+/**
+ * Normalize a LinkedIn profile URL into a stable slug.
+ *
+ * @param rawUrl - The LinkedIn profile URL (or `null`/`undefined`)
+ * @returns The lowercase profile slug extracted from `rawUrl`, or `null` if a slug cannot be determined
+ */
 function getLinkedInProfileSlug(rawUrl: string | null | undefined): string | null {
   if (!rawUrl) return null
   let url = rawUrl.trim()
@@ -63,7 +68,15 @@ function getLinkedInProfileSlug(rawUrl: string | null | undefined): string | nul
   }
 }
 
-// Normalize LinkedIn company URLs to a stable slug
+/**
+ * Derives a canonical lowercase slug for a LinkedIn company URL.
+ *
+ * Accepts full or partial URLs (with or without scheme) and extracts the company identifier
+ * from the path (preferring the segment after `company` when present).
+ *
+ * @param rawUrl - The company URL or identifier string; may be null or undefined.
+ * @returns The company slug in lowercase, or `null` if no slug can be determined. For malformed URLs, returns a cleaned, lowercased version of the input with the query removed and any trailing slash trimmed.
+ */
 function getCompanySlug(rawUrl: string | null | undefined): string | null {
   if (!rawUrl) return null
   let url = rawUrl.trim()
@@ -87,6 +100,13 @@ function getCompanySlug(rawUrl: string | null | undefined): string | null {
   }
 }
 
+/**
+ * Page component that provides a UI and workflow to import LinkedIn profiles, scrape their data, and persist people, companies, and positions to the database.
+ *
+ * The component accepts multiline LinkedIn profile URLs, normalizes and parses them, calls a scraping API, matches or creates company records, inserts people and position records, and exposes progress, error, and completion states in the UI.
+ *
+ * @returns A React element rendering the LinkedIn import interface and managing the import workflow.
+ */
 export default function LinkedInImportPage() {
   const router = useRouter()
   const [urlInput, setUrlInput] = useState('')

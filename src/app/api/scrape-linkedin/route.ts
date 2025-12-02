@@ -5,6 +5,13 @@ import { triggerScrape, pollForSnapshot, BrightDataLinkedInProfile, BrightDataLi
 const PROFILE_DATASET_ID = 'gd_l1viktl72bvl7bjuj0'
 const COMPANY_DATASET_ID = 'gd_l1vikfnt1wgvvqz95w'
 
+/**
+ * Handle POST requests to trigger and poll a Bright Data LinkedIn scrape for one or more LinkedIn URLs.
+ *
+ * Accepts a JSON body with `url` (string) or `urls` (string[]) and an optional `type` ('profile' | 'company', default 'profile'). Filters inputs to LinkedIn URLs, limits processing to the first 20 URLs, triggers a scrape for the selected dataset, and polls for results up to 20 attempts with a 15-second interval.
+ *
+ * @returns On success: an object with `type`, `data` (array of profile or company records), and `count`. On error: an object with `error` and an appropriate 4xx/5xx HTTP status code.
+ */
 export async function POST(request: NextRequest) {
   try {
     const { url, urls, type = 'profile' } = await request.json()

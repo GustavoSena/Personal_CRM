@@ -11,7 +11,12 @@ interface BrightDataClient {
 }
 
 // Initialize Bright Data client
-// API key should be set in BRIGHTDATA_API_KEY environment variable
+/**
+ * Create a Bright Data client configured using the BRIGHTDATA_API_KEY environment variable.
+ *
+ * @throws Error if the `BRIGHTDATA_API_KEY` environment variable is not set.
+ * @returns A configured Bright Data client instance.
+ */
 export function getBrightDataClient(): BrightDataClient {
   const apiKey = process.env.BRIGHTDATA_API_KEY
   
@@ -25,7 +30,21 @@ export function getBrightDataClient(): BrightDataClient {
   }) as unknown as BrightDataClient
 }
 
-// Helper to poll for snapshot readiness
+/**
+ * Polls Bright Data until a dataset snapshot becomes ready and returns its parsed JSON records.
+ *
+ * Repeats up to `maxAttempts`, waiting `intervalMs` milliseconds between attempts. Handles HTTP
+ * 200 (ready) and 202 (still processing) responses; any other response or exhaustion of attempts
+ * results in an error.
+ *
+ * @param snapshotId - The Bright Data snapshot identifier to poll.
+ * @param maxAttempts - Maximum number of polling attempts (default: 20).
+ * @param intervalMs - Delay in milliseconds between polling attempts (default: 15000).
+ * @returns An array of records parsed from the snapshot JSON; if the snapshot JSON is a single
+ * object, it is returned as a single-element array.
+ * @throws If BRIGHTDATA_API_KEY is not set, if the API returns a non-OK error status, or if the
+ * snapshot is not ready after `maxAttempts`.
+ */
 export async function pollForSnapshot(
   snapshotId: string,
   maxAttempts: number = 20,
@@ -62,7 +81,15 @@ export async function pollForSnapshot(
   throw new Error(`Snapshot not ready after ${maxAttempts} attempts`)
 }
 
-// Trigger a scrape and return snapshot ID
+/**
+ * Trigger a Bright Data dataset scrape and obtain the resulting snapshot identifier.
+ *
+ * @param datasetId - The Bright Data dataset identifier to trigger
+ * @param inputs - Array of input objects, each with a `url` to scrape
+ * @returns The `snapshot_id` returned by Bright Data
+ * @throws If the `BRIGHTDATA_API_KEY` environment variable is not set
+ * @throws If the Bright Data API responds with a non-OK status (error text included)
+ */
 export async function triggerScrape(
   datasetId: string,
   inputs: { url: string }[]

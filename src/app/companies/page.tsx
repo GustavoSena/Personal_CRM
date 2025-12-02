@@ -34,6 +34,12 @@ interface PageProps {
   searchParams: Promise<{ topic?: string | string[] }>
 }
 
+/**
+ * Render the Companies page containing a header, topic filter, and company LinkedIn sync view.
+ *
+ * @param searchParams - A promise that resolves to an object with an optional `topic` field (string | string[]). The `topic` value is used to determine which topics are selected in the filter.
+ * @returns A React element that displays the page header, a TopicFilter populated from all company topics, and a CompanyLinkedInSync component showing companies filtered by the selected topics.
+ */
 export default async function CompaniesPage({ searchParams }: PageProps) {
   const companies = await getCompanies()
   const allTopics = getAllTopics(companies)

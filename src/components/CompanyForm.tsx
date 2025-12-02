@@ -9,6 +9,12 @@ interface CompanyFormProps {
   company?: Company
 }
 
+/**
+ * Derives a normalized company slug from a LinkedIn URL-like string.
+ *
+ * @param rawUrl - A LinkedIn URL, partial URL, pathname, or null/undefined.
+ * @returns The company slug lowercased when one can be determined (the segment after `company` in the path, or the last path segment), or `null` if no slug is present. If URL parsing fails, returns the input lowercased with its query string and trailing slash removed.
+ */
 function getCompanySlug(rawUrl: string | null | undefined): string | null {
   if (!rawUrl) return null
   let url = rawUrl.trim()
@@ -32,6 +38,12 @@ function getCompanySlug(rawUrl: string | null | undefined): string | null {
   }
 }
 
+/**
+ * Renders a form for creating or editing a company, managing form state and submitting changes to the database.
+ *
+ * @param company - Optional existing company used to prefill the form for editing.
+ * @returns The CompanyForm React element.
+ */
 export function CompanyForm({ company }: CompanyFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)

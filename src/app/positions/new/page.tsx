@@ -20,7 +20,14 @@ interface Company {
   linkedin_url: string | null
 }
 
-// Extract a stable LinkedIn profile slug from different URL variants
+/**
+ * Extracts a normalized LinkedIn profile slug from a URL or path.
+ *
+ * Locates the "in" path segment and returns the following segment as the slug; if "in" is not present, uses the last path segment. The returned slug is lowercased. Returns `null` when the input is empty or a slug cannot be determined.
+ *
+ * @param rawUrl - The LinkedIn profile URL or path to extract the slug from.
+ * @returns The normalized profile slug (lowercase), or `null` if extraction fails.
+ */
 function getLinkedInProfileSlug(rawUrl: string | null | undefined): string | null {
   if (!rawUrl) return null
   let url = rawUrl.trim()
@@ -44,7 +51,15 @@ function getLinkedInProfileSlug(rawUrl: string | null | undefined): string | nul
   }
 }
 
-// Extract a stable LinkedIn company slug from different URL variants
+/**
+ * Extracts a stable LinkedIn company slug from various company URL formats.
+ *
+ * Derives the slug from the path segment following `company` when present, otherwise from the last path segment;
+ * normalizes the result to lowercase. Returns `null` for empty, invalid, or unparsable input.
+ *
+ * @param rawUrl - A company LinkedIn URL or partial URL (may omit scheme)
+ * @returns The extracted company slug in lowercase, or `null` on failure
+ */
 function getCompanySlug(rawUrl: string | null | undefined): string | null {
   if (!rawUrl) return null
   let url = rawUrl.trim()
@@ -68,6 +83,13 @@ function getCompanySlug(rawUrl: string | null | undefined): string | null {
   }
 }
 
+/**
+ * Renders the "Add Position" page that lets the user create a new position and associate it with a person and a company.
+ *
+ * Supports selecting a person and company from the local database or importing them from LinkedIn URLs (scrapes external data and inserts new records when needed). Validates required fields, shows loading and error states, and navigates to the positions list on successful creation.
+ *
+ * @returns The rendered New Position page JSX element.
+ */
 export default function NewPositionPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
