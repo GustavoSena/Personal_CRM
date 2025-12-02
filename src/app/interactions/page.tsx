@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { Plus, MessageSquare, MapPin } from 'lucide-react'
+import { Plus, MessageSquare, MapPin, Calendar, Briefcase } from 'lucide-react'
 import { getInteractions } from '@/lib/queries'
+import { formatDateForDisplay } from '@/lib/utils'
 
 export const revalidate = 0
 
@@ -9,14 +10,15 @@ export default async function InteractionsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Interactions</h1>
         <Link
           href="/interactions/new"
-          className="inline-flex items-center px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors"
+          className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Interaction
+          <Plus className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">Add Interaction</span>
+          <span className="sm:hidden">Add</span>
         </Link>
       </div>
 
@@ -45,12 +47,26 @@ export default async function InteractionsPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 dark:text-white">{interaction.title}</h3>
-                  {interaction.place && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      {interaction.place}
-                    </p>
-                  )}
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {interaction.interaction_date && (
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        {formatDateForDisplay(interaction.interaction_date)}
+                      </span>
+                    )}
+                    {interaction.place && (
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        {interaction.place}
+                      </span>
+                    )}
+                    {interaction.my_position && (
+                      <span className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
+                        <Briefcase className="w-4 h-4" />
+                        {interaction.my_position.title} @ {interaction.my_position.companies?.name}
+                      </span>
+                    )}
+                  </div>
                   {interaction.description && (
                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                       {interaction.description}

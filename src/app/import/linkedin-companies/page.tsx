@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Search, Loader2, CheckCircle2, Building2 } from 'lucide-react'
+import { ArrowLeft, Search, Loader2, CheckCircle2, Building2, XCircle, AlertCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { getCompanySlug, parseLinkedInCompanyUrls } from '@/lib/utils'
+import { validateParsedCompany, isBrightDataCompanyValid } from '@/lib/linkedin-validation'
 
 interface ScrapedCompany {
   name: string
@@ -14,8 +15,9 @@ interface ScrapedCompany {
   website: string | null
   about: string | null
   country: string | null
-  status: 'pending' | 'saved' | 'skipped' | 'exists'
+  status: 'pending' | 'saved' | 'skipped' | 'exists' | 'error'
   existingId?: number
+  errorMessage?: string
 }
 
 
@@ -32,6 +34,7 @@ export default function LinkedInCompanyImportPage() {
 
   const savedCount = companies.filter(c => c.status === 'saved').length
   const existsCount = companies.filter(c => c.status === 'exists').length
+  const errorCount = companies.filter(c => c.status === 'error' || c.status === 'skipped').length
   const totalCount = companies.length
 
   // Parse URLs from input (one per line)
@@ -106,6 +109,21 @@ export default function LinkedInCompanyImportPage() {
             continue
           }
 
+          // Validate Bright Data response
+          if (!isBrightDataCompanyValid(companyData)) {
+            scrapedCompanies.push({
+              name: companyData.name || 'Unknown',
+              linkedinUrl: canonicalUrl,
+              logoUrl: null,
+              website: null,
+              about: null,
+              country: null,
+              status: 'error',
+              errorMessage: 'Scrape failed: No valid data returned (company may be private or URL invalid)'
+            })
+            continue
+          }
+
           // Create new company
           const newCompany: ScrapedCompany = {
             name: companyData.name || 'Unknown Company',
@@ -115,6 +133,20 @@ export default function LinkedInCompanyImportPage() {
             about: companyData.about || null,
             country: companyData.country_code || null,
             status: 'pending'
+          }
+
+          // Validate parsed company data
+          const validation = validateParsedCompany({
+            name: newCompany.name,
+            website: newCompany.website,
+            logoUrl: newCompany.logoUrl
+          })
+
+          if (!validation.isValid) {
+            newCompany.status = 'error'
+            newCompany.errorMessage = validation.errors.join('; ') || 'Invalid company data'
+            scrapedCompanies.push(newCompany)
+            continue
           }
 
           // Save to database
@@ -201,38 +233,54 @@ export default function LinkedInCompanyImportPage() {
         <div className="space-y-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center gap-4 mb-4">
-              <CheckCircle2 className="w-8 h-8 text-green-500" />
+              {errorCount === 0 ? (
+                <CheckCircle2 className="w-8 h-8 text-green-500" />
+              ) : savedCount > 0 || existsCount > 0 ? (
+                <AlertCircle className="w-8 h-8 text-yellow-500" />
+              ) : (
+                <XCircle className="w-8 h-8 text-red-500" />
+              )}
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Import Complete</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  {errorCount === 0 ? 'Import Complete' : savedCount > 0 || existsCount > 0 ? 'Partially Complete' : 'Import Failed'}
+                </h2>
                 <p className="text-gray-600 dark:text-gray-400">
                   {savedCount} new {savedCount === 1 ? 'company' : 'companies'} saved
                   {existsCount > 0 && `, ${existsCount} already existed`}
                 </p>
+                {errorCount > 0 && (
+                  <p className="text-red-600 dark:text-red-400 text-sm">
+                    {errorCount} {errorCount === 1 ? 'company' : 'companies'} failed to import
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {companies.map((company, index) => (
-                <div key={index} className="py-3 flex items-center gap-3">
+                <div key={index} className="py-3 flex items-start gap-3">
                   {company.logoUrl ? (
                     <img src={company.logoUrl} alt="" className="w-10 h-10 rounded object-cover" />
                   ) : (
-                    <div className="w-10 h-10 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
                       <Building2 className="w-5 h-5 text-gray-500" />
                     </div>
                   )}
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 dark:text-white">{company.name}</p>
                     <p className="text-sm text-gray-500 truncate">{company.linkedinUrl}</p>
+                    {company.errorMessage && (
+                      <p className="text-sm text-red-600 dark:text-red-400 mt-1">{company.errorMessage}</p>
+                    )}
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded ${
+                  <span className={`text-xs px-2 py-1 rounded flex-shrink-0 ${
                     company.status === 'saved' 
                       ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                       : company.status === 'exists'
                       ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                       : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                   }`}>
-                    {company.status === 'saved' ? 'Saved' : company.status === 'exists' ? 'Already exists' : 'Skipped'}
+                    {company.status === 'saved' ? 'Saved' : company.status === 'exists' ? 'Already exists' : 'Failed'}
                   </span>
                 </div>
               ))}

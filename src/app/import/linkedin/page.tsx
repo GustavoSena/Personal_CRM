@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Search, Loader2, ChevronRight, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, Search, Loader2, ChevronRight, CheckCircle2, AlertCircle, XCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { getCompanySlug, getLinkedInProfileSlug, parseLinkedInProfileUrls } from '@/lib/utils'
+import { validateParsedProfile, isBrightDataProfileValid } from '@/lib/linkedin-validation'
 
 interface ScrapedPerson {
   name: string
@@ -31,7 +32,8 @@ interface ScrapedPosition {
 interface QueuedProfile {
   person: ScrapedPerson
   positions: ScrapedPosition[]
-  status: 'pending' | 'current' | 'saved' | 'skipped'
+  status: 'pending' | 'current' | 'saved' | 'skipped' | 'error'
+  errorMessage?: string
 }
 
 interface ExistingCompany {
@@ -56,6 +58,7 @@ export default function LinkedInImportPage() {
   const [existingCompanies, setExistingCompanies] = useState<ExistingCompany[]>([])
 
   const savedCount = queue.filter(q => q.status === 'saved').length
+  const skippedCount = queue.filter(q => q.status === 'skipped' || q.status === 'error').length
   const totalCount = queue.length
 
   // Fetch existing companies to check for matches
@@ -202,17 +205,46 @@ export default function LinkedInImportPage() {
       console.log('Raw API response:', result)
 
       if (result.data && result.data.length > 0) {
-        // Parse all profiles
+        // Parse all profiles and validate them
         const profiles: QueuedProfile[] = result.data.map((profile: Record<string, unknown>, index: number) => {
           const inputUrl = (profile.input_url as string) || (profile.url as string) || urls[index] || ''
-          return parseProfile(profile, inputUrl, companies)
+          
+          // Check if Bright Data returned valid data
+          if (!isBrightDataProfileValid(profile)) {
+            const parsedProfile = parseProfile(profile, inputUrl, companies)
+            parsedProfile.status = 'error'
+            parsedProfile.errorMessage = 'Scrape failed: No valid data returned (profile may be private or URL invalid)'
+            return parsedProfile
+          }
+          
+          const parsedProfile = parseProfile(profile, inputUrl, companies)
+          
+          // Validate the parsed profile
+          const validation = validateParsedProfile({
+            name: parsedProfile.person.name,
+            headline: parsedProfile.person.headline,
+            positions: parsedProfile.positions.map(p => ({ title: p.title, company: p.company }))
+          })
+          
+          if (!validation.isValid) {
+            parsedProfile.status = 'error'
+            parsedProfile.errorMessage = validation.errors.join('; ') || 'Invalid profile data'
+          }
+          
+          return parsedProfile
         })
 
-        // Auto-save all profiles
+        // Auto-save valid profiles only
         let savedProfiles = 0
         let updatedCompanies = [...companies]
         
         for (const queuedProfile of profiles) {
+          // Skip profiles that failed validation
+          if (queuedProfile.status === 'error') {
+            console.log(`Skipping invalid profile: ${queuedProfile.person.linkedinUrl} - ${queuedProfile.errorMessage}`)
+            continue
+          }
+          
           try {
             const { person, positions } = queuedProfile
             
@@ -232,6 +264,8 @@ export default function LinkedInImportPage() {
 
             if (personError) {
               console.error('Error creating person:', personError)
+              queuedProfile.status = 'error'
+              queuedProfile.errorMessage = `Database error: ${personError.message}`
               continue
             }
 
@@ -329,19 +363,92 @@ export default function LinkedInImportPage() {
           </div>
         </div>
       )}
-
       {error && (
         <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg">{error}</div>
       )}
 
       {queue.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
-          <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">All Done!</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">Saved {savedCount} of {totalCount} profiles</p>
-          <button onClick={handleFinish} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 mx-auto">
-            <ChevronRight className="w-4 h-4" /> Go to People
-          </button>
+        <div className="space-y-6">
+          {/* Summary Card */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+            {skippedCount === 0 ? (
+              <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            ) : savedCount > 0 ? (
+              <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+            ) : (
+              <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            )}
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              {skippedCount === 0 ? 'All Done!' : savedCount > 0 ? 'Partially Complete' : 'Import Failed'}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-2">
+              Saved {savedCount} of {totalCount} profile{totalCount !== 1 ? 's' : ''}
+            </p>
+            {skippedCount > 0 && (
+              <p className="text-red-600 dark:text-red-400 text-sm mb-4">
+                {skippedCount} profile{skippedCount !== 1 ? 's' : ''} failed to import
+              </p>
+            )}
+            <button onClick={handleFinish} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 mx-auto">
+              <ChevronRight className="w-4 h-4" /> Go to People
+            </button>
+          </div>
+
+          {/* Failed Profiles List */}
+          {skippedCount > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <XCircle className="w-5 h-5 text-red-500" />
+                Failed Imports
+              </h3>
+              <div className="space-y-3">
+                {queue.filter(q => q.status === 'error' || q.status === 'skipped').map((profile, idx) => (
+                  <div key={idx} className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-gray-900 dark:text-white truncate">
+                        {profile.person.name !== 'Unknown' ? profile.person.name : profile.person.linkedinUrl}
+                      </p>
+                      <p className="text-sm text-red-600 dark:text-red-400">
+                        {profile.errorMessage || 'Unknown error'}
+                      </p>
+                      <a 
+                        href={profile.person.linkedinUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        {profile.person.linkedinUrl}
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Successful Profiles List */}
+          {savedCount > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500" />
+                Successfully Imported ({savedCount})
+              </h3>
+              <div className="space-y-2">
+                {queue.filter(q => q.status === 'saved').map((profile, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <span className="text-gray-900 dark:text-white">{profile.person.name}</span>
+                    {profile.person.headline && (
+                      <span className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                        — {profile.person.headline}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -43,22 +43,24 @@ export default async function PeoplePage({ searchParams }: PageProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">People</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link
             href="/import/linkedin"
-            className="inline-flex items-center px-4 py-2 bg-[#0077B5] text-white text-sm font-medium rounded-lg hover:bg-[#006097] transition-colors"
+            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-[#0077B5] text-white text-sm font-medium rounded-lg hover:bg-[#006097] transition-colors"
           >
-            <Import className="w-4 h-4 mr-2" />
-            Import from LinkedIn
+            <Import className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Import from LinkedIn</span>
+            <span className="sm:hidden">Import</span>
           </Link>
           <Link
             href="/people/new"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Person
+            <Plus className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Add Person</span>
+            <span className="sm:hidden">Add</span>
           </Link>
         </div>
       </div>

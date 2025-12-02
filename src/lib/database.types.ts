@@ -9,6 +9,29 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          id: number
+          my_person_id: number | null
+        }
+        Insert: {
+          id?: never
+          my_person_id?: number | null
+        }
+        Update: {
+          id?: never
+          my_person_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_settings_my_person_id_fkey"
+            columns: ["my_person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       companies: {
         Row: {
           id: number
@@ -70,22 +93,36 @@ export type Database = {
         Row: {
           description: string | null
           id: number
+          interaction_date: string | null
+          my_position_id: number | null
           place: string | null
           title: string
         }
         Insert: {
           description?: string | null
           id?: never
+          interaction_date?: string | null
+          my_position_id?: number | null
           place?: string | null
           title: string
         }
         Update: {
           description?: string | null
           id?: never
+          interaction_date?: string | null
+          my_position_id?: number | null
           place?: string | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "interactions_my_position_id_fkey"
+            columns: ["my_position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       people: {
         Row: {

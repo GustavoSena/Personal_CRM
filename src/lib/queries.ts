@@ -6,6 +6,7 @@ export type Person = Database['public']['Tables']['people']['Row']
 export type Company = Database['public']['Tables']['companies']['Row']
 export type Position = Database['public']['Tables']['positions']['Row']
 export type Interaction = Database['public']['Tables']['interactions']['Row']
+export type AppSettings = Database['public']['Tables']['app_settings']['Row']
 
 // Extended types with relations
 export type PositionWithCompany = Position & {
@@ -62,18 +63,32 @@ export async function getPersonPositions(personId: string | number): Promise<Pos
   return (data ?? []) as PositionWithCompany[]
 }
 
-export async function getPersonInteractions(personId: string | number): Promise<Interaction[]> {
+export type InteractionWithPosition = Interaction & {
+  my_position?: {
+    id: number
+    title: string
+    companies: { id: number; name: string } | null
+  } | null
+}
+
+export async function getPersonInteractions(personId: string | number): Promise<InteractionWithPosition[]> {
   const supabase = await createServerSupabaseClient()
   const { data } = await supabase
     .from('interaction_people')
-    .select('interaction_id, interactions(*)')
+    .select(`
+      interaction_id,
+      interactions(
+        *,
+        my_position:positions(id, title, companies(id, name))
+      )
+    `)
     .eq('person_id', typeof personId === 'string' ? parseInt(personId) : personId)
 
   if (!data) return []
   // Extract interactions from the join result
   return data
-    .map(ip => (ip as Record<string, unknown>).interactions as Interaction | null)
-    .filter((i): i is Interaction => i !== null)
+    .map(ip => (ip as Record<string, unknown>).interactions as InteractionWithPosition | null)
+    .filter((i): i is InteractionWithPosition => i !== null)
 }
 
 // ============================================================================
@@ -117,6 +132,33 @@ export async function getCompanyPositions(companyId: string | number): Promise<P
   return (data ?? []) as PositionWithPerson[]
 }
 
+export async function getCompanyInteractions(companyId: string | number): Promise<InteractionWithPosition[]> {
+  const supabase = await createServerSupabaseClient()
+  
+  // First get all position IDs for this company
+  const { data: positions } = await supabase
+    .from('positions')
+    .select('id')
+    .eq('company_id', typeof companyId === 'string' ? parseInt(companyId) : companyId)
+
+  if (!positions || positions.length === 0) return []
+
+  const positionIds = positions.map(p => p.id)
+
+  // Then get all interactions that reference these positions
+  const { data: interactions } = await supabase
+    .from('interactions')
+    .select(`
+      *,
+      my_position:positions(id, title, companies(id, name)),
+      interaction_people(person_id, people(id, name))
+    `)
+    .in('my_position_id', positionIds)
+    .order('interaction_date', { ascending: false, nullsFirst: false })
+
+  return (interactions ?? []) as InteractionWithPosition[]
+}
+
 // ============================================================================
 // Position Queries
 // ============================================================================
@@ -143,8 +185,12 @@ export async function getInteractions() {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from('interactions')
-    .select('*, interaction_people(person_id, people(name))')
-    .order('id', { ascending: false })
+    .select(`
+      *,
+      interaction_people(person_id, people(name)),
+      my_position:positions(id, title, companies(id, name))
+    `)
+    .order('interaction_date', { ascending: false, nullsFirst: false })
 
   if (error) {
     console.error('Error fetching interactions:', error.message)
@@ -172,4 +218,72 @@ export async function getStats() {
     positions: positions.count ?? 0,
     interactions: interactions.count ?? 0,
   }
+}
+
+// ============================================================================
+// App Settings / My Profile Queries
+// Note: In a multi-user setup, these would filter by user_id from auth
+// ============================================================================
+
+export async function getAppSettings(): Promise<AppSettings | null> {
+  const supabase = await createServerSupabaseClient()
+  const { data } = await supabase
+    .from('app_settings')
+    .select('*')
+    .limit(1)
+    .single()
+
+  return data
+}
+
+export async function getMyProfile(): Promise<Person | null> {
+  const supabase = await createServerSupabaseClient()
+  const { data: settings } = await supabase
+    .from('app_settings')
+    .select('my_person_id')
+    .limit(1)
+    .single()
+
+  if (!settings?.my_person_id) return null
+
+  const { data: person } = await supabase
+    .from('people')
+    .select('*')
+    .eq('id', settings.my_person_id)
+    .single()
+
+  return person
+}
+
+export async function getMyPositions(): Promise<PositionWithCompany[]> {
+  const supabase = await createServerSupabaseClient()
+  
+  // Get my person ID from settings
+  const { data: settings } = await supabase
+    .from('app_settings')
+    .select('my_person_id')
+    .limit(1)
+    .single()
+
+  if (!settings?.my_person_id) return []
+
+  // Get positions for my profile
+  const { data } = await supabase
+    .from('positions')
+    .select('*, companies(*)')
+    .eq('person_id', settings.my_person_id)
+    .order('active', { ascending: false })
+
+  return (data ?? []) as PositionWithCompany[]
+}
+
+export async function isMyProfile(personId: number): Promise<boolean> {
+  const supabase = await createServerSupabaseClient()
+  const { data: settings } = await supabase
+    .from('app_settings')
+    .select('my_person_id')
+    .limit(1)
+    .single()
+
+  return settings?.my_person_id === personId
 }
