@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Briefcase, Pencil } from 'lucide-react'
 import { EditPositionModal } from './EditPositionModal'
+import { formatDateForDisplay } from '@/lib/utils'
 
 interface Person {
   id: number
@@ -91,8 +92,8 @@ export function PositionsPageList({ positions }: PositionsPageListProps) {
                   <p className="text-xs text-gray-400 dark:text-gray-500">
                     {position.duration || (
                       <>
-                        {position.from_date && `From ${position.from_date}`}
-                        {position.until_date ? ` to ${position.until_date}` : position.active ? ' - Present' : ''}
+                        {position.from_date && `From ${formatDateForDisplay(position.from_date)}`}
+                        {position.until_date ? ` to ${formatDateForDisplay(position.until_date)}` : position.active ? ' - Present' : ''}
                       </>
                     )}
                   </p>

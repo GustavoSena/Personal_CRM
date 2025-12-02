@@ -1,24 +1,7 @@
-import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { Users, Building2, Briefcase, MessageSquare } from 'lucide-react'
+import { getStats } from '@/lib/queries'
 
 export const revalidate = 0
-
-async function getStats() {
-  const supabase = await createServerSupabaseClient()
-  const [people, companies, positions, interactions] = await Promise.all([
-    supabase.from('people').select('id', { count: 'exact', head: true }),
-    supabase.from('companies').select('id', { count: 'exact', head: true }),
-    supabase.from('positions').select('id', { count: 'exact', head: true }),
-    supabase.from('interactions').select('id', { count: 'exact', head: true }),
-  ])
-
-  return {
-    people: people.count ?? 0,
-    companies: companies.count ?? 0,
-    positions: positions.count ?? 0,
-    interactions: interactions.count ?? 0,
-  }
-}
 
 export default async function Dashboard() {
   const stats = await getStats()

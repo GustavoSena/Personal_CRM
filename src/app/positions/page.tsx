@@ -1,25 +1,9 @@
 import Link from 'next/link'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { Plus } from 'lucide-react'
 import { PositionsPageList } from '@/components/PositionsPageList'
+import { getPositions } from '@/lib/queries'
 
 export const revalidate = 0
-
-async function getPositions() {
-  const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('positions')
-    .select('*, people(*), companies(*)')
-    .order('active', { ascending: false })
-    .order('from_date', { ascending: false })
-  
-  // RLS may return empty results - don't throw, just return empty array
-  if (error) {
-    console.error('Error fetching positions:', error.message)
-    return []
-  }
-  return data ?? []
-}
 
 /**
  * Server-rendered page that displays positions and provides controls to add a new position.

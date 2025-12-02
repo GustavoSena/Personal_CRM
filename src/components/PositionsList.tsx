@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Building2, Pencil } from 'lucide-react'
 import { EditPositionModal } from './EditPositionModal'
+import { formatDateForDisplay } from '@/lib/utils'
 
 interface Company {
   id: number
@@ -73,8 +74,8 @@ export function PositionsList({ positions }: PositionsListProps) {
                   </Link>
                 )}
                 {pos.duration && ` • ${pos.duration}`}
-                {!pos.duration && pos.from_date && ` • ${pos.from_date}`}
-                {!pos.duration && pos.until_date && ` - ${pos.until_date}`}
+                {!pos.duration && pos.from_date && ` • ${formatDateForDisplay(pos.from_date)}`}
+                {!pos.duration && pos.until_date && ` - ${formatDateForDisplay(pos.until_date)}`}
                 {!pos.duration && pos.active && !pos.until_date && pos.from_date && ' - Present'}
               </div>
             </div>

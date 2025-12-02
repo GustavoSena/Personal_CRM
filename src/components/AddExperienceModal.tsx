@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X, Search, Loader2, Building2, Plus, ExternalLink } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { PositionDateInput } from '@/components/PositionDateInput'
 
 interface Company {
   id: number
@@ -69,8 +70,13 @@ export function AddExperienceModal({ personId, isOpen, onClose, onSaved }: AddEx
   const [companies, setCompanies] = useState<Company[]>([])
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([])
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
+  const [searchFocused, setSearchFocused] = useState(false)
   const [title, setTitle] = useState('')
-  const [duration, setDuration] = useState('')
+  const [positionDates, setPositionDates] = useState({
+    fromDate: null as string | null,
+    untilDate: null as string | null,
+    duration: null as string | null,
+  })
   const [isActive, setIsActive] = useState(true)
   const [loading, setLoading] = useState(false)
   const [fetchingCompany, setFetchingCompany] = useState(false)
@@ -87,7 +93,7 @@ export function AddExperienceModal({ personId, isOpen, onClose, onSaved }: AddEx
   useEffect(() => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
-      const filtered = companies.filter(c => 
+      const filtered = companies.filter((c) =>
         c.name.toLowerCase().includes(query)
       )
       setFilteredCompanies(filtered)
@@ -101,14 +107,14 @@ export function AddExperienceModal({ personId, isOpen, onClose, onSaved }: AddEx
       .from('companies')
       .select('id, name, linkedin_url, logo_url')
       .order('name')
-    
+
     if (error) {
       console.error('Error fetching companies:', error.message)
       setCompanies([])
       setFilteredCompanies([])
       return
     }
-    
+
     setCompanies(data || [])
     setFilteredCompanies((data || []).slice(0, 10))
   }
@@ -130,10 +136,16 @@ export function AddExperienceModal({ personId, isOpen, onClose, onSaved }: AddEx
 
     try {
       // First check if company exists in DB
-      const { data: existingCompanies } = await supabase
+      const { data: existingCompanies, error: queryError } = await supabase
         .from('companies')
         .select('id, name, linkedin_url, logo_url')
-      
+
+      if (queryError) {
+        console.error('Error fetching companies:', queryError.message)
+        setError('Failed to check existing companies')
+        return
+      }
+
       const targetSlug = getCompanySlug(linkedinUrl)
       const existing = targetSlug
         ? existingCompanies?.find((c) => getCompanySlug(c.linkedin_url) === targetSlug)
@@ -161,7 +173,7 @@ export function AddExperienceModal({ personId, isOpen, onClose, onSaved }: AddEx
 
       if (result.data && result.data.length > 0) {
         const companyData = result.data[0]
-        
+
         // Create company in DB
         const slug = getCompanySlug(linkedinUrl) || getCompanySlug(companyData.url)
         const canonicalUrl = slug
@@ -174,9 +186,7 @@ export function AddExperienceModal({ personId, isOpen, onClose, onSaved }: AddEx
             name: companyData.name || 'Unknown Company',
             linkedin_url: canonicalUrl,
             logo_url: companyData.logo || null,
-            website: companyData.website || null,
-            country: companyData.country_code || null,
-            notes: companyData.about || null
+            website: companyData.website || null
           })
           .select()
           .single()
@@ -186,7 +196,7 @@ export function AddExperienceModal({ personId, isOpen, onClose, onSaved }: AddEx
         setSelectedCompany(newCompany)
         setMode('search')
         setSearchQuery(newCompany.name)
-        
+
         // Refresh companies list
         fetchCompanies()
       } else {
@@ -219,7 +229,9 @@ export function AddExperienceModal({ personId, isOpen, onClose, onSaved }: AddEx
           person_id: personId,
           company_id: selectedCompany.id,
           title: title.trim(),
-          duration: duration.trim() || null,
+          from_date: positionDates.fromDate,
+          until_date: positionDates.untilDate,
+          duration: positionDates.duration,
           active: isActive
         })
 
@@ -240,7 +252,7 @@ export function AddExperienceModal({ personId, isOpen, onClose, onSaved }: AddEx
     setLinkedinUrl('')
     setSelectedCompany(null)
     setTitle('')
-    setDuration('')
+    setPositionDates({ fromDate: null, untilDate: null, duration: null })
     setIsActive(true)
     setError(null)
     onClose()
@@ -301,17 +313,22 @@ export function AddExperienceModal({ personId, isOpen, onClose, onSaved }: AddEx
                       setSelectedCompany(null)
                     }
                   }}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setSearchFocused(false)}
                   placeholder="Search companies..."
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
-                
+
                 {/* Dropdown */}
-                {filteredCompanies.length > 0 && !selectedCompany && (
+                {filteredCompanies.length > 0 && !selectedCompany && searchFocused && (
                   <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                    {filteredCompanies.map(company => (
+                    {filteredCompanies.map((company) => (
                       <button
                         key={company.id}
-                        onClick={() => handleSelectCompany(company)}
+                        onMouseDown={(e) => {
+                          e.preventDefault()
+                          handleSelectCompany(company)
+                        }}
                         className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
                       >
                         {company.logo_url ? (
@@ -366,7 +383,7 @@ export function AddExperienceModal({ personId, isOpen, onClose, onSaved }: AddEx
                 </button>
               </div>
               <p className="text-xs text-gray-500">
-                If the company doesn&apos;t exist in the database, it will be fetched from LinkedIn and added.
+                If the company doesn't exist in the database, it will be fetched from LinkedIn and added.
               </p>
             </div>
           )}
@@ -385,33 +402,30 @@ export function AddExperienceModal({ personId, isOpen, onClose, onSaved }: AddEx
             />
           </div>
 
-          {/* Duration */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Duration
-            </label>
-            <input
-              type="text"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              placeholder="e.g., 2 yrs 3 mos"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-            />
-            <p className="text-xs text-gray-500">Optional - free-form text like "2 years" or "Jan 2020 - Present"</p>
-          </div>
-
           {/* Active Toggle */}
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
-              id="isActive"
+              id="isActiveModal"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
               className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            <label htmlFor="isActive" className="text-sm text-gray-700 dark:text-gray-300">
+            <label htmlFor="isActiveModal" className="text-sm text-gray-700 dark:text-gray-300">
               Current position
             </label>
+          </div>
+
+          {/* Time Period */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Time Period
+            </label>
+            <PositionDateInput
+              value={positionDates}
+              onChange={setPositionDates}
+              isActive={isActive}
+            />
           </div>
 
           {error && (

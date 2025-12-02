@@ -1,29 +1,11 @@
 import Link from 'next/link'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { Plus, Mail, Phone, MapPin, Linkedin, User, Import } from 'lucide-react'
 import { TopicFilter } from '@/components/TopicFilter'
-import { Database } from '@/lib/database.types'
+import { getPeople, Person } from '@/lib/queries'
 
 export const revalidate = 0
 
-type Person = Database['public']['Tables']['people']['Row']
-
-async function getPeople(): Promise<Person[]> {
-  const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('people')
-    .select('*')
-    .order('name')
-  
-  // RLS may return empty results - don't throw, just return empty array
-  if (error) {
-    console.error('Error fetching people:', error.message)
-    return []
-  }
-  return data ?? []
-}
-
-function getAllTopics(people: NonNullable<Awaited<ReturnType<typeof getPeople>>>) {
+function getAllTopics(people: Person[]) {
   const topicsSet = new Set<string>()
   people.forEach(p => p.skills_topics?.forEach(t => topicsSet.add(t)))
   return Array.from(topicsSet).sort()

@@ -1,57 +1,12 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { ArrowLeft, Pencil, Mail, Phone, MapPin, Linkedin, MessageSquare, AtSign, User } from 'lucide-react'
 import { DeletePersonButton } from '@/components/DeletePersonButton'
 import { AddExperienceButton } from '@/components/AddExperienceButton'
 import { PositionsList } from '@/components/PositionsList'
-import { Database } from '@/lib/database.types'
+import { getPerson, getPersonPositions, getPersonInteractions } from '@/lib/queries'
 
 export const revalidate = 0
-
-type Person = Database['public']['Tables']['people']['Row']
-type Position = Database['public']['Tables']['positions']['Row'] & {
-  companies: Database['public']['Tables']['companies']['Row'] | null
-}
-type Interaction = Database['public']['Tables']['interactions']['Row']
-
-async function getPerson(id: string): Promise<Person | null> {
-  const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('people')
-    .select('*')
-    .eq('id', parseInt(id))
-    .single()
-  
-  if (error) return null
-  return data
-}
-
-async function getPersonPositions(personId: string): Promise<Position[]> {
-  const supabase = await createServerSupabaseClient()
-  const { data } = await supabase
-    .from('positions')
-    .select('*, companies(*)')
-    .eq('person_id', parseInt(personId))
-    .order('active', { ascending: false })
-    .order('from_date', { ascending: false })
-  
-  return (data ?? []) as Position[]
-}
-
-async function getPersonInteractions(personId: string): Promise<Interaction[]> {
-  const supabase = await createServerSupabaseClient()
-  const { data } = await supabase
-    .from('interaction_people')
-    .select('interaction_id, interactions(*)')
-    .eq('person_id', parseInt(personId))
-  
-  if (!data) return []
-  // Extract interactions from the join result
-  return data
-    .map(ip => (ip as any).interactions as Interaction | null)
-    .filter((i): i is Interaction => i !== null)
-}
 
 interface PageProps {
   params: Promise<{ id: string }>

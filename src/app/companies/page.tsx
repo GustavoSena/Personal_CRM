@@ -1,30 +1,12 @@
 import Link from 'next/link'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { Plus } from 'lucide-react'
+import { Plus, Import } from 'lucide-react'
 import { TopicFilter } from '@/components/TopicFilter'
 import { CompanyLinkedInSync } from '@/components/CompanyLinkedInSync'
-import { Database } from '@/lib/database.types'
+import { getCompanies, Company } from '@/lib/queries'
 
 export const revalidate = 0
 
-type Company = Database['public']['Tables']['companies']['Row']
-
-async function getCompanies(): Promise<Company[]> {
-  const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('companies')
-    .select('*')
-    .order('name')
-  
-  // RLS may return empty results - don't throw, just return empty array
-  if (error) {
-    console.error('Error fetching companies:', error.message)
-    return []
-  }
-  return data ?? []
-}
-
-function getAllTopics(companies: NonNullable<Awaited<ReturnType<typeof getCompanies>>>) {
+function getAllTopics(companies: Company[]) {
   const topicsSet = new Set<string>()
   companies.forEach(c => c.topics?.forEach(t => topicsSet.add(t)))
   return Array.from(topicsSet).sort()
@@ -62,13 +44,22 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Companies</h1>
-        <Link
-          href="/companies/new"
-          className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Company
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/import/linkedin-companies"
+            className="inline-flex items-center px-4 py-2 bg-[#0077B5] text-white text-sm font-medium rounded-lg hover:bg-[#006097] transition-colors"
+          >
+            <Import className="w-4 h-4 mr-2" />
+            Import from LinkedIn
+          </Link>
+          <Link
+            href="/companies/new"
+            className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Company
+          </Link>
+        </div>
       </div>
 
       <TopicFilter topics={allTopics} selectedTopics={selectedTopics} colorScheme="green" />

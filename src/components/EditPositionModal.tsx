@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X, Save, Loader2, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { PositionDateInput } from './PositionDateInput'
 
 interface Position {
   id: number
@@ -46,9 +47,11 @@ export function EditPositionModal({
   onDeleted 
 }: EditPositionModalProps) {
   const [title, setTitle] = useState(position.title)
-  const [duration, setDuration] = useState(position.duration || '')
-  const [fromDate, setFromDate] = useState(position.from_date || '')
-  const [untilDate, setUntilDate] = useState(position.until_date || '')
+  const [positionDates, setPositionDates] = useState({
+    fromDate: position.from_date,
+    untilDate: position.until_date,
+    duration: position.duration,
+  })
   const [isActive, setIsActive] = useState(position.active)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -58,9 +61,11 @@ export function EditPositionModal({
   // Reset form when position changes
   useEffect(() => {
     setTitle(position.title)
-    setDuration(position.duration || '')
-    setFromDate(position.from_date || '')
-    setUntilDate(position.until_date || '')
+    setPositionDates({
+      fromDate: position.from_date,
+      untilDate: position.until_date,
+      duration: position.duration,
+    })
     setIsActive(position.active)
     setError(null)
     setShowDeleteConfirm(false)
@@ -80,9 +85,9 @@ export function EditPositionModal({
         .from('positions')
         .update({
           title: title.trim(),
-          duration: duration.trim() || null,
-          from_date: fromDate || null,
-          until_date: untilDate || null,
+          duration: positionDates.duration,
+          from_date: positionDates.fromDate,
+          until_date: positionDates.untilDate,
           active: isActive
         })
         .eq('id', position.id)
@@ -156,63 +161,30 @@ export function EditPositionModal({
             />
           </div>
 
-          {/* Duration (text) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Duration
-            </label>
-            <input
-              type="text"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              placeholder="e.g., 2 yrs 3 mos"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-            />
-            <p className="mt-1 text-xs text-gray-500">Free-form text like "2 years" or "Jan 2020 - Present"</p>
-          </div>
-
-          {/* Date Range */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                From Date
-              </label>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Until Date
-              </label>
-              <input
-                type="date"
-                value={untilDate}
-                onChange={(e) => setUntilDate(e.target.value)}
-                disabled={isActive}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white disabled:opacity-50"
-              />
-            </div>
-          </div>
-
           {/* Active Toggle */}
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
-              id="isActive"
+              id="isActiveEdit"
               checked={isActive}
-              onChange={(e) => {
-                setIsActive(e.target.checked)
-                if (e.target.checked) setUntilDate('')
-              }}
+              onChange={(e) => setIsActive(e.target.checked)}
               className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            <label htmlFor="isActive" className="text-sm text-gray-700 dark:text-gray-300">
+            <label htmlFor="isActiveEdit" className="text-sm text-gray-700 dark:text-gray-300">
               Current position (still active)
             </label>
+          </div>
+
+          {/* Time Period */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Time Period
+            </label>
+            <PositionDateInput
+              value={positionDates}
+              onChange={setPositionDates}
+              isActive={isActive}
+            />
           </div>
 
           {error && (

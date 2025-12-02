@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Search, Loader2, User, Building2, Plus, ExternalLink, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { PositionDateInput } from '@/components/PositionDateInput'
 
 interface Person {
   id: number
@@ -108,6 +109,11 @@ function NewPositionPageContent() {
   // Form state
   const [title, setTitle] = useState('')
   const [isActive, setIsActive] = useState(true)
+  const [positionDates, setPositionDates] = useState({
+    fromDate: null as string | null,
+    untilDate: null as string | null,
+    duration: null as string | null,
+  })
   
   // Person state
   const [personMode, setPersonMode] = useState<'search' | 'linkedin'>('search')
@@ -127,6 +133,7 @@ function NewPositionPageContent() {
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([])
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [fetchingCompany, setFetchingCompany] = useState(false)
+  const [companySearchFocused, setCompanySearchFocused] = useState(false)
   
   // General state
   const [saving, setSaving] = useState(false)
@@ -322,9 +329,7 @@ function NewPositionPageContent() {
             name: companyData.name || 'Unknown Company',
             linkedin_url: canonicalUrl,
             logo_url: companyData.logo || null,
-            website: companyData.website || null,
-            country: companyData.country_code || null,
-            notes: companyData.about || null
+            website: companyData.website || null
           })
           .select()
           .single()
@@ -369,7 +374,10 @@ function NewPositionPageContent() {
           person_id: selectedPerson.id,
           company_id: selectedCompany.id,
           title: title.trim(),
-          active: isActive
+          active: isActive,
+          from_date: positionDates.fromDate,
+          until_date: positionDates.untilDate,
+          duration: positionDates.duration
         })
 
       if (insertError) throw insertError
@@ -556,31 +564,35 @@ function NewPositionPageContent() {
                     setSelectedCompany(null)
                   }
                 }}
+                onFocus={() => setCompanySearchFocused(true)}
+                onBlur={() => setCompanySearchFocused(false)}
                 placeholder="Search companies..."
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               />
               
-              {filteredCompanies.length > 0 && !selectedCompany && (
+              {filteredCompanies.length > 0 && !selectedCompany && companySearchFocused && (
                 <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  {filteredCompanies.map(company => (
-                    <button
-                      key={company.id}
-                      onClick={() => handleSelectCompany(company)}
-                      className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
-                    >
-                      {company.logo_url ? (
-                        <img src={company.logo_url} alt="" className="w-8 h-8 rounded object-cover" />
-                      ) : (
-                        <div className="w-8 h-8 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
-                          <Building2 className="w-4 h-4 text-gray-500" />
-                        </div>
-                      )}
-                      <span className="text-sm text-gray-900 dark:text-white">{company.name}</span>
-                    </button>
-                  ))}
-                </div>
+                {filteredCompanies.map(company => (
+                  <button
+                    key={company.id}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      handleSelectCompany(company)
+                    }}
+                    className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
+                  >
+                    {company.logo_url ? (
+                      <img src={company.logo_url} alt="" className="w-8 h-8 rounded object-cover" />
+                    ) : (
+                      <div className="w-8 h-8 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                        <Building2 className="w-4 h-4 text-gray-500" />
+                      </div>
+                    )}
+                    <span className="text-sm text-gray-900 dark:text-white">{company.name}</span>
+                  </button>
+                ))}
+              </div>
               )}
-
               {selectedCompany && (
                 <div className="flex items-center gap-3 p-2 mt-2 bg-green-50 dark:bg-green-900/30 rounded-lg">
                   {selectedCompany.logo_url ? (
@@ -627,6 +639,18 @@ function NewPositionPageContent() {
           <label htmlFor="isActive" className="text-sm text-gray-700 dark:text-gray-300">
             This is a current/active position
           </label>
+        </div>
+
+        {/* Date/Duration */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Time Period
+          </label>
+          <PositionDateInput
+            value={positionDates}
+            onChange={setPositionDates}
+            isActive={isActive}
+          />
         </div>
 
         {error && (

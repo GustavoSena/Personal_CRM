@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Search, Loader2, ChevronRight, CheckCircle2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { parseLinkedInProfileUrls } from '@/lib/utils'
 
 interface ScrapedPerson {
   name: string
@@ -136,14 +137,7 @@ export default function LinkedInImportPage() {
     return match?.id || null
   }
 
-  // Parse URLs from input (one per line)
-  const parseUrls = (input: string): string[] => {
-    return input
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line.includes('linkedin.com/in/'))
-      .slice(0, 20) // Max 20
-  }
+
 
   // Parse profile data into our format
   const parseProfile = (profile: Record<string, unknown>, url: string, companies: ExistingCompany[]): QueuedProfile => {
@@ -237,7 +231,7 @@ export default function LinkedInImportPage() {
   }
 
   const handleScrape = async () => {
-    const urls = parseUrls(urlInput)
+    const urls = parseLinkedInProfileUrls(urlInput)
     
     if (urls.length === 0) {
       setError('Please enter at least one valid LinkedIn profile URL (e.g., https://linkedin.com/in/username)')
@@ -387,8 +381,8 @@ export default function LinkedInImportPage() {
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white font-mono text-sm"
           />
           <div className="flex items-center justify-between mt-3">
-            <p className="text-sm text-gray-500">{parseUrls(urlInput).length} valid URL{parseUrls(urlInput).length !== 1 ? 's' : ''}</p>
-            <button onClick={handleScrape} disabled={loading || parseUrls(urlInput).length === 0}
+            <p className="text-sm text-gray-500">{parseLinkedInProfileUrls(urlInput).length} valid URL{parseLinkedInProfileUrls(urlInput).length !== 1 ? 's' : ''}</p>
+            <button onClick={handleScrape} disabled={loading || parseLinkedInProfileUrls(urlInput).length === 0}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               {loading ? 'Fetching...' : 'Fetch All Profiles'}

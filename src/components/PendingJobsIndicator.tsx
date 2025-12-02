@@ -42,9 +42,9 @@ export function PendingJobsIndicator() {
           </>
         )}
         {expanded ? (
-          <ChevronDown className="w-4 h-4 ml-1" />
-        ) : (
           <ChevronUp className="w-4 h-4 ml-1" />
+        ) : (
+          <ChevronDown className="w-4 h-4 ml-1" />
         )}
       </button>
 
