@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { triggerScrape, pollForSnapshot, BrightDataLinkedInProfile, BrightDataLinkedInCompany } from '@/lib/brightdata'
 
 // Dataset IDs for Bright Data
@@ -14,6 +15,17 @@ const COMPANY_DATASET_ID = 'gd_l1vikfnt1wgvvqz95w'
  */
 export async function POST(request: NextRequest) {
   try {
+    // Auth check - only authenticated users can trigger scrapes
+    const supabase = await createServerSupabaseClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized - authentication required' },
+        { status: 401 }
+      )
+    }
+
     const { url, urls, type = 'profile' } = await request.json()
     
     // Support both single url and multiple urls

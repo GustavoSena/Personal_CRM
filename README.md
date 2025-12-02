@@ -86,6 +86,22 @@ The database includes 5 tables:
 - **Row Level Security**: Database policies restrict access to authenticated users only
 - **SSR Auth**: Uses `@supabase/ssr` for secure server-side authentication
 
+### Single-User Setup
+
+This CRM is designed for personal use with a single authenticated user. To set it up:
+
+1. **Create your user account** in the Supabase Dashboard:
+   - Go to **Authentication** → **Users**
+   - Click **Add user** → **Create new user**
+   - Enter your email and password
+   - This will be your only account for the CRM
+
+2. **RLS policies are pre-configured** to allow all operations for any authenticated user. Since there's only one user (you), no per-user data isolation is needed.
+
+3. **No signup flow**: The login page only allows existing users to sign in. New accounts must be created manually in Supabase Dashboard.
+
+> **Note**: If you need multi-user support in the future, you'll need to update the RLS policies to filter by `auth.uid()` and add user_id columns to your tables.
+
 ## Deployment
 
 Deploy to Vercel:

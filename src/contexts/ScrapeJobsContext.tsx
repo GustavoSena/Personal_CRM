@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
 
 interface ScrapeJob {
   id: string
@@ -50,6 +50,15 @@ interface ScrapeJobsProviderProps {
  */
 export function ScrapeJobsProvider({ children }: ScrapeJobsProviderProps) {
   const [jobs, setJobs] = useState<ScrapeJob[]>([])
+  // Track if polling is active to prevent multiple intervals
+  const pollingRef = useRef<NodeJS.Timeout | null>(null)
+  // Use ref to access current jobs in interval without causing re-renders
+  const jobsRef = useRef<ScrapeJob[]>([])
+  
+  // Keep jobsRef in sync with jobs state
+  useEffect(() => {
+    jobsRef.current = jobs
+  }, [jobs])
 
   const pendingCount = jobs.filter(j => j.status === 'pending' || j.status === 'processing').length
 
@@ -66,19 +75,22 @@ export function ScrapeJobsProvider({ children }: ScrapeJobsProviderProps) {
     setJobs(prev => [...prev])
   }, [])
 
-  // Poll for job status updates
-  useEffect(() => {
-    const pendingJobs = jobs.filter(j => j.status === 'pending' || j.status === 'processing')
+  // Check job statuses
+  const checkJobs = useCallback(async () => {
+    const currentJobs = jobsRef.current
+    const pendingJobs = currentJobs.filter(j => j.status === 'pending' || j.status === 'processing')
+    
     if (pendingJobs.length === 0) return
 
-    const checkJobs = async () => {
-      for (const job of pendingJobs) {
-        try {
-          const response = await fetch(`/api/scrape-linkedin/check/${job.id}`)
-          if (!response.ok) continue
+    for (const job of pendingJobs) {
+      try {
+        const response = await fetch(`/api/scrape-linkedin/check/${job.id}`)
+        if (!response.ok) continue
 
-          const result = await response.json()
-          
+        const result = await response.json()
+        
+        // Only update if status actually changed
+        if (result.status !== job.status) {
           setJobs(prev => prev.map(j => {
             if (j.id !== job.id) return j
             return {
@@ -88,19 +100,34 @@ export function ScrapeJobsProvider({ children }: ScrapeJobsProviderProps) {
               error: result.error
             }
           }))
-        } catch (error) {
-          console.error(`Error checking job ${job.id}:`, error)
         }
+      } catch (error) {
+        console.error(`Error checking job ${job.id}:`, error)
       }
     }
+  }, [])
 
-    // Check immediately
-    checkJobs()
+  // Start/stop polling based on pending job count
+  useEffect(() => {
+    const hasPendingJobs = jobs.some(j => j.status === 'pending' || j.status === 'processing')
+    
+    if (hasPendingJobs && !pollingRef.current) {
+      // Start polling - check immediately then every 15 seconds
+      checkJobs()
+      pollingRef.current = setInterval(checkJobs, 15000)
+    } else if (!hasPendingJobs && pollingRef.current) {
+      // Stop polling when no pending jobs
+      clearInterval(pollingRef.current)
+      pollingRef.current = null
+    }
 
-    // Then check every 15 seconds
-    const interval = setInterval(checkJobs, 15000)
-    return () => clearInterval(interval)
-  }, [jobs])
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current)
+        pollingRef.current = null
+      }
+    }
+  }, [pendingCount, checkJobs]) // Only depend on pendingCount, not full jobs array
 
   return (
     <ScrapeJobsContext.Provider value={{ jobs, pendingCount, addJob, removeJob, refreshJobs }}>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Search, Loader2, User, Building2, Plus, ExternalLink, Check } from 'lucide-react'
@@ -21,12 +21,22 @@ interface Company {
 }
 
 /**
+ * Wrapper component that provides Suspense boundary for useSearchParams.
+ */
+export default function NewPositionPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      </div>
+    }>
+      <NewPositionPageContent />
+    </Suspense>
+  )
+}
+
+/**
  * Extracts a normalized LinkedIn profile slug from a URL or path.
- *
- * Locates the "in" path segment and returns the following segment as the slug; if "in" is not present, uses the last path segment. The returned slug is lowercased. Returns `null` when the input is empty or a slug cannot be determined.
- *
- * @param rawUrl - The LinkedIn profile URL or path to extract the slug from.
- * @returns The normalized profile slug (lowercase), or `null` if extraction fails.
  */
 function getLinkedInProfileSlug(rawUrl: string | null | undefined): string | null {
   if (!rawUrl) return null
@@ -84,13 +94,13 @@ function getCompanySlug(rawUrl: string | null | undefined): string | null {
 }
 
 /**
- * Renders the "Add Position" page that lets the user create a new position and associate it with a person and a company.
+ * Renders the "Add Position" page content that lets the user create a new position and associate it with a person and a company.
  *
  * Supports selecting a person and company from the local database or importing them from LinkedIn URLs (scrapes external data and inserts new records when needed). Validates required fields, shows loading and error states, and navigates to the positions list on successful creation.
  *
  * @returns The rendered New Position page JSX element.
  */
-export default function NewPositionPage() {
+function NewPositionPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const preselectedCompanyId = searchParams.get('company_id')

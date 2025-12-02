@@ -97,10 +97,18 @@ export function AddExperienceModal({ personId, isOpen, onClose, onSaved }: AddEx
   }, [searchQuery, companies])
 
   const fetchCompanies = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('companies')
       .select('id, name, linkedin_url, logo_url')
       .order('name')
+    
+    if (error) {
+      console.error('Error fetching companies:', error.message)
+      setCompanies([])
+      setFilteredCompanies([])
+      return
+    }
+    
     setCompanies(data || [])
     setFilteredCompanies((data || []).slice(0, 10))
   }

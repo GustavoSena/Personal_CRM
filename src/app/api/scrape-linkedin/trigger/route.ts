@@ -17,6 +17,17 @@ const COMPANY_DATASET_ID = 'gd_l1vikfnt1wgvvqz95w'
  */
 export async function POST(request: NextRequest) {
   try {
+    // Auth check - only authenticated users can trigger scrapes
+    const supabase = await createServerSupabaseClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized - authentication required' },
+        { status: 401 }
+      )
+    }
+
     const { url, urls, type = 'profile' } = await request.json()
     
     // Support both single url and multiple urls
@@ -86,8 +97,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Trigger] Got snapshot ID: ${snapshotId}`)
 
-    // Create a job record in Supabase
-    const supabase = await createServerSupabaseClient()
+    // Create a job record in Supabase (reuse client from auth check)
     const { data: job, error: jobError } = await supabase
       .from('linkedin_scrape_jobs')
       .insert({
