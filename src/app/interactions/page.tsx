@@ -1,22 +1,8 @@
 import Link from 'next/link'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { Plus, MessageSquare, MapPin } from 'lucide-react'
+import { getInteractions } from '@/lib/queries'
 
 export const revalidate = 0
-
-async function getInteractions() {
-  const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('interactions')
-    .select('*, interaction_people(person_id, people(name))')
-    .order('id', { ascending: false })
-  
-  if (error) {
-    console.error('Error fetching interactions:', error.message)
-    return []
-  }
-  return data ?? []
-}
 
 export default async function InteractionsPage() {
   const interactions = await getInteractions()

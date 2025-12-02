@@ -4,11 +4,18 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Company } from '@/lib/database.types'
 import { supabase } from '@/lib/supabase'
+import { getCompanySlug } from '@/lib/utils'
 
 interface CompanyFormProps {
   company?: Company
 }
 
+/**
+ * Renders a form for creating or editing a company, managing form state and submitting changes to the database.
+ *
+ * @param company - Optional existing company used to prefill the form for editing.
+ * @returns The CompanyForm React element.
+ */
 export function CompanyForm({ company }: CompanyFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -27,11 +34,18 @@ export function CompanyForm({ company }: CompanyFormProps) {
     setLoading(true)
     setError(null)
 
+    const slug = getCompanySlug(formData.linkedin_url || null)
+    const canonicalLinkedInUrl = formData.linkedin_url
+      ? slug
+        ? `https://www.linkedin.com/company/${slug}`
+        : formData.linkedin_url.trim()
+      : null
+
     const data = {
       name: formData.name,
       logo_url: formData.logo_url || null,
       website: formData.website || null,
-      linkedin_url: formData.linkedin_url || null,
+      linkedin_url: canonicalLinkedInUrl,
       topics: formData.topics
         ? formData.topics.split(',').map((s) => s.trim()).filter(Boolean)
         : null,

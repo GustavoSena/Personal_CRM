@@ -1,60 +1,26 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { ArrowLeft, Pencil, Mail, Phone, MapPin, Linkedin, MessageSquare, AtSign, User } from 'lucide-react'
 import { DeletePersonButton } from '@/components/DeletePersonButton'
-import { Database } from '@/lib/database.types'
+import { AddExperienceButton } from '@/components/AddExperienceButton'
+import { PositionsList } from '@/components/PositionsList'
+import { getPerson, getPersonPositions, getPersonInteractions } from '@/lib/queries'
 
 export const revalidate = 0
-
-type Person = Database['public']['Tables']['people']['Row']
-type Position = Database['public']['Tables']['positions']['Row'] & {
-  companies: Database['public']['Tables']['companies']['Row'] | null
-}
-type Interaction = Database['public']['Tables']['interactions']['Row']
-
-async function getPerson(id: string): Promise<Person | null> {
-  const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('people')
-    .select('*')
-    .eq('id', parseInt(id))
-    .single()
-  
-  if (error) return null
-  return data
-}
-
-async function getPersonPositions(personId: string): Promise<Position[]> {
-  const supabase = await createServerSupabaseClient()
-  const { data } = await supabase
-    .from('positions')
-    .select('*, companies(*)')
-    .eq('person_id', parseInt(personId))
-    .order('active', { ascending: false })
-    .order('from_date', { ascending: false })
-  
-  return (data ?? []) as Position[]
-}
-
-async function getPersonInteractions(personId: string): Promise<Interaction[]> {
-  const supabase = await createServerSupabaseClient()
-  const { data } = await supabase
-    .from('interaction_people')
-    .select('interaction_id, interactions(*)')
-    .eq('person_id', parseInt(personId))
-  
-  if (!data) return []
-  // Extract interactions from the join result
-  return data
-    .map(ip => (ip as any).interactions as Interaction | null)
-    .filter((i): i is Interaction => i !== null)
-}
 
 interface PageProps {
   params: Promise<{ id: string }>
 }
 
+/**
+ * Render the person detail page for the person identified by route params.
+ *
+ * Renders contact information, notes, positions, skills/topics, and interactions for the specified person.
+ * If the person cannot be found, triggers a 404 via `notFound()`.
+ *
+ * @param params - Route parameters containing the `id` of the person to display.
+ * @returns The rendered person detail page as a JSX element.
+ */
 export default async function PersonPage({ params }: PageProps) {
   const { id } = await params
   const person = await getPerson(id)
@@ -162,31 +128,11 @@ export default async function PersonPage({ params }: PageProps) {
 
           {/* Positions */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Positions</h2>
-            {positions.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400">No positions recorded</p>
-            ) : (
-              <div className="space-y-4">
-                {positions.map((pos: any) => (
-                  <div key={pos.id} className="flex items-start gap-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900 dark:text-white">{pos.title}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {pos.companies?.name}
-                        {pos.from_date && ` • ${pos.from_date}`}
-                        {pos.until_date && ` - ${pos.until_date}`}
-                        {pos.active && !pos.until_date && ' - Present'}
-                      </div>
-                    </div>
-                    {pos.active && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                        Active
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Positions</h2>
+              <AddExperienceButton personId={person.id} />
+            </div>
+            <PositionsList positions={positions} />
           </div>
         </div>
 

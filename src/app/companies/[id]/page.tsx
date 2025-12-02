@@ -1,37 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { ArrowLeft, Pencil, Globe, Linkedin, Users, Building2 } from 'lucide-react'
 import { DeleteCompanyButton } from '@/components/DeleteCompanyButton'
-import { Database } from '@/lib/database.types'
+import { getCompany, getCompanyPositions } from '@/lib/queries'
+import { formatDateForDisplay } from '@/lib/utils'
 
 export const revalidate = 0
-
-type Company = Database['public']['Tables']['companies']['Row']
-
-async function getCompany(id: string): Promise<Company | null> {
-  const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('companies')
-    .select('*')
-    .eq('id', parseInt(id))
-    .single()
-  
-  if (error) return null
-  return data
-}
-
-async function getCompanyPositions(companyId: string) {
-  const supabase = await createServerSupabaseClient()
-  const { data } = await supabase
-    .from('positions')
-    .select('*, people(*)')
-    .eq('company_id', parseInt(companyId))
-    .order('active', { ascending: false })
-    .order('from_date', { ascending: false })
-  
-  return data ?? []
-}
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -130,8 +104,8 @@ export default async function CompanyPage({ params }: PageProps) {
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
                         {pos.title}
-                        {pos.from_date && ` • ${pos.from_date}`}
-                        {pos.until_date && ` - ${pos.until_date}`}
+                        {pos.from_date && ` • ${formatDateForDisplay(pos.from_date)}`}
+                        {pos.until_date && ` - ${formatDateForDisplay(pos.until_date)}`}
                         {pos.active && !pos.until_date && ' - Present'}
                       </div>
                     </div>

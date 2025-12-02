@@ -1,21 +1,6 @@
 import { notFound } from 'next/navigation'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { CompanyForm } from '@/components/CompanyForm'
-import { Database } from '@/lib/database.types'
-
-type Company = Database['public']['Tables']['companies']['Row']
-
-async function getCompany(id: string): Promise<Company | null> {
-  const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('companies')
-    .select('*')
-    .eq('id', parseInt(id))
-    .single()
-  
-  if (error) return null
-  return data
-}
+import { getCompany } from '@/lib/queries'
 
 interface PageProps {
   params: Promise<{ id: string }>

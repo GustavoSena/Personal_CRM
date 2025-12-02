@@ -1,25 +1,17 @@
 import Link from 'next/link'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { Plus, Briefcase } from 'lucide-react'
+import { Plus } from 'lucide-react'
+import { PositionsPageList } from '@/components/PositionsPageList'
+import { getPositions } from '@/lib/queries'
 
 export const revalidate = 0
 
-async function getPositions() {
-  const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('positions')
-    .select('*, people(*), companies(*)')
-    .order('active', { ascending: false })
-    .order('from_date', { ascending: false })
-  
-  // RLS may return empty results - don't throw, just return empty array
-  if (error) {
-    console.error('Error fetching positions:', error.message)
-    return []
-  }
-  return data ?? []
-}
-
+/**
+ * Server-rendered page that displays positions and provides controls to add a new position.
+ *
+ * Renders a page header with an "Add Position" action. When there are no positions, shows an empty-state card with a call-to-action to create one; when positions exist, renders the positions list component.
+ *
+ * @returns The page's React element containing the header, add button, and either the empty-state prompt or the positions list.
+ */
 export default async function PositionsPage() {
   const positions = await getPositions()
 
@@ -48,43 +40,7 @@ export default async function PositionsPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {positions.map((position: any) => (
-            <div
-              key={position.id}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                    <Briefcase className="w-5 h-5 text-purple-600 dark:text-purple-300" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{position.title}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      <Link href={`/people/${position.person_id}`} className="hover:text-blue-600">
-                        {position.people?.name}
-                      </Link>
-                      {' at '}
-                      <Link href={`/companies/${position.company_id}`} className="hover:text-blue-600">
-                        {position.companies?.name}
-                      </Link>
-                    </p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500">
-                      {position.from_date && `From ${position.from_date}`}
-                      {position.until_date ? ` to ${position.until_date}` : position.active ? ' - Present' : ''}
-                    </p>
-                  </div>
-                </div>
-                {position.active && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                    Active
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <PositionsPageList positions={positions} />
       )}
     </div>
   )

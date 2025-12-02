@@ -1,29 +1,11 @@
 import Link from 'next/link'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { Plus, Mail, Phone, MapPin, Linkedin, User } from 'lucide-react'
+import { Plus, Mail, Phone, MapPin, Linkedin, User, Import } from 'lucide-react'
 import { TopicFilter } from '@/components/TopicFilter'
-import { Database } from '@/lib/database.types'
+import { getPeople, Person } from '@/lib/queries'
 
 export const revalidate = 0
 
-type Person = Database['public']['Tables']['people']['Row']
-
-async function getPeople(): Promise<Person[]> {
-  const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('people')
-    .select('*')
-    .order('name')
-  
-  // RLS may return empty results - don't throw, just return empty array
-  if (error) {
-    console.error('Error fetching people:', error.message)
-    return []
-  }
-  return data ?? []
-}
-
-function getAllTopics(people: NonNullable<Awaited<ReturnType<typeof getPeople>>>) {
+function getAllTopics(people: Person[]) {
   const topicsSet = new Set<string>()
   people.forEach(p => p.skills_topics?.forEach(t => topicsSet.add(t)))
   return Array.from(topicsSet).sort()
@@ -33,6 +15,14 @@ interface PageProps {
   searchParams: Promise<{ topic?: string | string[] }>
 }
 
+/**
+ * Renders the People page with topic filtering, import/add actions, and a list of person cards.
+ *
+ * Displays a topic filter, action buttons for importing from LinkedIn and adding a person, and a grid or empty state depending on filtered results. Selected topics from `searchParams` are used to filter the people shown.
+ *
+ * @param searchParams - A promise resolving to an object that may contain `topic` (a string or array of strings) representing selected topic(s) from the URL query.
+ * @returns The page React element containing the people list, filters, and action controls.
+ */
 export default async function PeoplePage({ searchParams }: PageProps) {
   const people = await getPeople()
   const allTopics = getAllTopics(people)
@@ -55,13 +45,22 @@ export default async function PeoplePage({ searchParams }: PageProps) {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">People</h1>
-        <Link
-          href="/people/new"
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Person
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/import/linkedin"
+            className="inline-flex items-center px-4 py-2 bg-[#0077B5] text-white text-sm font-medium rounded-lg hover:bg-[#006097] transition-colors"
+          >
+            <Import className="w-4 h-4 mr-2" />
+            Import from LinkedIn
+          </Link>
+          <Link
+            href="/people/new"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Person
+          </Link>
+        </div>
       </div>
 
       <TopicFilter topics={allTopics} selectedTopics={selectedTopics} colorScheme="blue" />
