@@ -5,6 +5,13 @@ import { formatDateForDisplay } from '@/lib/utils'
 
 export const revalidate = 0
 
+/**
+ * Render the Interactions page showing recorded interactions or an empty-state prompt to add one.
+ *
+ * Displays a header with an "Add Interaction" action. When there are no interactions, shows a centered empty state with a call-to-action; when interactions exist, renders a list of interaction cards that include title, date, place, the user's position, description, and participant badges.
+ *
+ * @returns The React element tree for the Interactions page UI
+ */
 export default async function InteractionsPage() {
   const interactions = await getInteractions()
 

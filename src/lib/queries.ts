@@ -52,6 +52,12 @@ export async function getPerson(id: string | number): Promise<Person | null> {
   return data
 }
 
+/**
+ * Fetches all positions for a given person, including each position's associated company.
+ *
+ * @param personId - The person ID (string or number) whose positions to retrieve
+ * @returns An array of positions with a `companies` property for each position; returns an empty array if none are found
+ */
 export async function getPersonPositions(personId: string | number): Promise<PositionWithCompany[]> {
   const supabase = await createServerSupabaseClient()
   const { data } = await supabase
@@ -71,6 +77,12 @@ export type InteractionWithPosition = Interaction & {
   } | null
 }
 
+/**
+ * Retrieve interactions associated with a person, including optional linked position and company data.
+ *
+ * @param personId - The person's id, provided as a number or a numeric string
+ * @returns An array of `InteractionWithPosition` objects (empty array if no interactions found)
+ */
 export async function getPersonInteractions(personId: string | number): Promise<InteractionWithPosition[]> {
   const supabase = await createServerSupabaseClient()
   const { data } = await supabase
@@ -121,6 +133,12 @@ export async function getCompany(id: string | number): Promise<Company | null> {
   return data
 }
 
+/**
+ * Fetches positions for a given company, including each position's related people.
+ *
+ * @param companyId - The company id (number or numeric string) to query positions for
+ * @returns An array of positions augmented with a `people` property (each entry may be `null`); empty array if no positions found
+ */
 export async function getCompanyPositions(companyId: string | number): Promise<PositionWithPerson[]> {
   const supabase = await createServerSupabaseClient()
   const { data } = await supabase
@@ -132,6 +150,12 @@ export async function getCompanyPositions(companyId: string | number): Promise<P
   return (data ?? []) as PositionWithPerson[]
 }
 
+/**
+ * Fetches interactions associated with any position belonging to the specified company.
+ *
+ * @param companyId - The company identifier (number or numeric string) whose positions' interactions should be returned
+ * @returns An array of `InteractionWithPosition` objects for interactions referencing positions of the company; an empty array if there are no matching interactions
+ */
 export async function getCompanyInteractions(companyId: string | number): Promise<InteractionWithPosition[]> {
   const supabase = await createServerSupabaseClient()
   
@@ -179,7 +203,13 @@ export async function getPositions(): Promise<PositionWithRelations[]> {
 
 // ============================================================================
 // Interaction Queries
-// ============================================================================
+/**
+ * Fetches all interaction records with their related people and position/company details, ordered by interaction_date descending.
+ *
+ * Each item includes nested `interaction_people` (with `person_id` and `people.name`) and an optional `my_position` containing `id`, `title`, and `companies` (`id` and `name`). Returns an empty array if the query fails or no data is found.
+ *
+ * @returns An array of `InteractionWithPosition` objects; empty array if no rows are returned or an error occurs.
+ */
 
 export async function getInteractions() {
   const supabase = await createServerSupabaseClient()
@@ -201,7 +231,11 @@ export async function getInteractions() {
 
 // ============================================================================
 // Stats / Dashboard Queries
-// ============================================================================
+/**
+ * Retrieve aggregate counts for people, companies, positions, and interactions.
+ *
+ * @returns An object with numeric counts: `people`, `companies`, `positions`, and `interactions` (each defaults to 0 if unavailable).
+ */
 
 export async function getStats() {
   const supabase = await createServerSupabaseClient()
@@ -223,7 +257,11 @@ export async function getStats() {
 // ============================================================================
 // App Settings / My Profile Queries
 // Note: In a multi-user setup, these would filter by user_id from auth
-// ============================================================================
+/**
+ * Fetches the single row from the `app_settings` table.
+ *
+ * @returns The app settings row, or `null` if no settings row exists.
+ */
 
 export async function getAppSettings(): Promise<AppSettings | null> {
   const supabase = await createServerSupabaseClient()
@@ -236,6 +274,11 @@ export async function getAppSettings(): Promise<AppSettings | null> {
   return data
 }
 
+/**
+ * Retrieves the person record referenced by the configured `my_person_id` in app settings.
+ *
+ * @returns The `Person` corresponding to `my_person_id`, or `null` if the setting is missing or no matching person is found.
+ */
 export async function getMyProfile(): Promise<Person | null> {
   const supabase = await createServerSupabaseClient()
   const { data: settings } = await supabase
@@ -255,6 +298,12 @@ export async function getMyProfile(): Promise<Person | null> {
   return person
 }
 
+/**
+ * Fetches positions associated with the current user as specified in app settings.
+ *
+ * Reads `my_person_id` from the `app_settings` row; if `my_person_id` is not set, returns an empty array.
+ *
+ * @returns An array of positions for the current user; each position includes a `companies` relation (company object or `null`).
 export async function getMyPositions(): Promise<PositionWithCompany[]> {
   const supabase = await createServerSupabaseClient()
   
@@ -277,6 +326,12 @@ export async function getMyPositions(): Promise<PositionWithCompany[]> {
   return (data ?? []) as PositionWithCompany[]
 }
 
+/**
+ * Determines whether the given person ID matches the current user's profile ID stored in app settings.
+ *
+ * @param personId - The person ID to compare against the stored `my_person_id`
+ * @returns `true` if `personId` equals the `my_person_id` from app settings, `false` otherwise
+ */
 export async function isMyProfile(personId: number): Promise<boolean> {
   const supabase = await createServerSupabaseClient()
   const { data: settings } = await supabase

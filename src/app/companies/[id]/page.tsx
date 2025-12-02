@@ -12,6 +12,15 @@ interface PageProps {
   params: Promise<{ id: string }>
 }
 
+/**
+ * Render the company detail page for a given company id.
+ *
+ * Fetches the company record along with its positions and interactions, then renders the company overview,
+ * people, topics, and interactions UI. If no company exists for the provided id, calls `notFound()` to render a 404 page.
+ *
+ * @param params - A promise resolving to route parameters containing the `id` of the company
+ * @returns A React element containing the company detail page UI
+ */
 export default async function CompanyPage({ params }: PageProps) {
   const { id } = await params
   const company = await getCompany(id)
