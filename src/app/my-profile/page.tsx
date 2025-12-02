@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { UserCircle, ArrowRight, Users } from 'lucide-react'
 import { getAppSettings, getMyProfile, getMyPositions } from '@/lib/queries'
@@ -13,7 +12,7 @@ export const revalidate = 0
  * @returns A React element for the My Profile page that shows the profile view when a profile exists or a setup prompt when it does not.
  */
 export default async function MyProfilePage() {
-  const [settings, myProfile, myPositions] = await Promise.all([
+  const [settings,myProfile, myPositions] = await Promise.all([
     getAppSettings(),
     getMyProfile(),
     getMyPositions()

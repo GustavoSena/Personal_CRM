@@ -14,29 +14,15 @@ export async function POST(request: Request) {
     const { personId } = await request.json()
     const supabase = await createServerSupabaseClient()
 
-    // Check if settings row exists
-    const { data: existing } = await supabase
+    // Single-row app settings table; use id = 1 and rely on PK for conflict handling
+    const { error } = await supabase
       .from('app_settings')
-      .select('id')
-      .limit(1)
-      .single()
+      .upsert(
+        { id: 1, my_person_id: personId },
+        { onConflict: 'id' }
+      )
 
-    if (existing) {
-      // Update existing row
-      const { error } = await supabase
-        .from('app_settings')
-        .update({ my_person_id: personId })
-        .eq('id', existing.id)
-
-      if (error) throw error
-    } else {
-      // Insert new row
-      const { error } = await supabase
-        .from('app_settings')
-        .insert({ my_person_id: personId })
-
-      if (error) throw error
-    }
+    if (error) throw error
 
     return NextResponse.json({ success: true })
   } catch (error: any) {
@@ -62,7 +48,7 @@ export async function DELETE() {
     const { error } = await supabase
       .from('app_settings')
       .update({ my_person_id: null })
-      .neq('id', 0) // Update all rows (there should only be one)
+      .eq('id', 1)
 
     if (error) throw error
 

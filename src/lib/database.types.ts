@@ -15,7 +15,7 @@ export type Database = {
           my_person_id: number | null
         }
         Insert: {
-          id?: never
+          id?: number
           my_person_id?: number | null
         }
         Update: {

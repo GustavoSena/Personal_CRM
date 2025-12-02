@@ -304,6 +304,7 @@ export async function getMyProfile(): Promise<Person | null> {
  * Reads `my_person_id` from the `app_settings` row; if `my_person_id` is not set, returns an empty array.
  *
  * @returns An array of positions for the current user; each position includes a `companies` relation (company object or `null`).
+ */
 export async function getMyPositions(): Promise<PositionWithCompany[]> {
   const supabase = await createServerSupabaseClient()
   

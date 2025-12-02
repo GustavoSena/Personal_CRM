@@ -8,6 +8,7 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
  * returning each position's `id`, `title`, `company_id`, `active` flag, and nested `companies` (`id`, `name`).
  *
  * @returns An object with `positions`—an array of position records (each containing `id`, `title`, `company_id`, `active`, and `companies` with `id` and `name`)—and `myPersonId` which is the configured person ID or `null` when not available.
+*/
 export async function GET() {
   try {
     const supabase = await createServerSupabaseClient()
