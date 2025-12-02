@@ -3,6 +3,13 @@ import { getStats } from '@/lib/queries'
 
 export const revalidate = 0
 
+/**
+ * Render the dashboard UI with statistic summary cards and a Quick Start panel.
+ *
+ * The component displays cards for People, Companies, Positions, and Interactions (each linking to its list page and showing the corresponding count) and includes quick actions to add a person or company.
+ *
+ * @returns A JSX element containing the dashboard layout with statistic cards and Quick Start actions.
+ */
 export default async function Dashboard() {
   const stats = await getStats()
 

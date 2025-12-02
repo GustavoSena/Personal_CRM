@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
+/**
+ * Fetches the current user's saved positions and the configured person ID from app settings.
+ *
+ * Retrieves the `my_person_id` setting and, when present, queries the `positions` table for that person,
+ * returning each position's `id`, `title`, `company_id`, `active` flag, and nested `companies` (`id`, `name`).
+ *
+ * @returns An object with `positions`—an array of position records (each containing `id`, `title`, `company_id`, `active`, and `companies` with `id` and `name`)—and `myPersonId` which is the configured person ID or `null` when not available.
 export async function GET() {
   try {
     const supabase = await createServerSupabaseClient()

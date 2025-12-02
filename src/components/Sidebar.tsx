@@ -16,6 +16,11 @@ const navigation = [
   { name: 'Interactions', href: '/interactions', icon: MessageSquare },
 ]
 
+/**
+ * Renders the application's responsive sidebar with navigation links, a mobile header and slide-out menu, and a sign-out control.
+ *
+ * @returns The sidebar element: a responsive UI that displays a top mobile header and slide-out navigation on small screens and a fixed vertical navigation with sign-out on large screens.
+ */
 export function Sidebar() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)

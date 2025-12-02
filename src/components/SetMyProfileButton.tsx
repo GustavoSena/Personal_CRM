@@ -8,6 +8,16 @@ interface SetMyProfileButtonProps {
   personId: number
 }
 
+/**
+ * Render a button that marks or unmarks a person as the current user's profile.
+ *
+ * Shows a loading spinner while determining association; if the given person is already the user's profile it renders a "My Profile" button (click to clear), otherwise it renders a "Set as My Profile" button (click to set).
+ *
+ * The component performs network requests to determine and update the profile and refreshes the router after a successful change.
+ *
+ * @param personId - The ID of the person to check or set as the current user's profile
+ * @returns A React element containing either a loading spinner or the appropriate action button
+ */
 export function SetMyProfileButton({ personId }: SetMyProfileButtonProps) {
   const router = useRouter()
   const [isMyProfile, setIsMyProfile] = useState(false)

@@ -30,6 +30,16 @@ interface AddInteractionModalProps {
   preselectedCompanyId?: number
 }
 
+/**
+ * Renders a modal form to create a new interaction, optionally preselecting a person or a position by company, and saves the interaction and its participant links to the backend.
+ *
+ * @param isOpen - Whether the modal is visible.
+ * @param onClose - Called when the modal is closed; resets local form state.
+ * @param onSaved - Called after the interaction is successfully saved.
+ * @param preselectedPersonId - Optional person id to automatically add to the "People Involved" list when available.
+ * @param preselectedCompanyId - Optional company id used to auto-select a matching "My Position" as the interaction context.
+ * @returns The modal element when `isOpen` is true, otherwise `null`.
+ */
 export function AddInteractionModal({ 
   isOpen, 
   onClose, 

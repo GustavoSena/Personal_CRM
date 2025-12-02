@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
+/**
+ * Set or update the current user's profile ID in the app_settings table.
+ *
+ * Updates the `my_person_id` of the existing app_settings row or inserts a new row
+ * with `my_person_id` if no settings row exists.
+ *
+ * @returns `{ success: true }` on success; on failure returns an object with an `error` message and HTTP status 500.
+ */
 export async function POST(request: Request) {
   try {
     const { personId } = await request.json()
@@ -40,6 +48,13 @@ export async function POST(request: Request) {
   }
 }
 
+/**
+ * Clears the stored current user profile ID from the `app_settings` table.
+ *
+ * Sets `my_person_id` to `null` for all rows in `app_settings` (the table is expected to contain a single row).
+ *
+ * @returns A NextResponse whose JSON body is `{ success: true }` on success, or `{ error: string }` with HTTP status `500` on failure.
+ */
 export async function DELETE() {
   try {
     const supabase = await createServerSupabaseClient()

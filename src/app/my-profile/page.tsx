@@ -5,6 +5,13 @@ import { getAppSettings, getMyProfile, getMyPositions } from '@/lib/queries'
 
 export const revalidate = 0
 
+/**
+ * Renders the "My Profile" page for the current user.
+ *
+ * Displays the user's profile card (avatar, name, email, location), a list of their positions with active status, and quick stats. If no profile exists, shows a setup prompt with a call-to-action to browse people.
+ *
+ * @returns A React element for the My Profile page that shows the profile view when a profile exists or a setup prompt when it does not.
+ */
 export default async function MyProfilePage() {
   const [settings, myProfile, myPositions] = await Promise.all([
     getAppSettings(),

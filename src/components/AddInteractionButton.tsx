@@ -11,6 +11,18 @@ interface AddInteractionButtonProps {
   variant?: 'primary' | 'secondary' | 'link'
 }
 
+/**
+ * Renders a button that opens the Add Interaction modal.
+ *
+ * The component displays a variant-styled "Add Interaction" button which opens the modal when clicked.
+ * When an interaction is saved in the modal, the current route is refreshed. Any provided preselected
+ * person or company IDs are forwarded to the modal.
+ *
+ * @param preselectedPersonId - Optional ID of a person to preselect inside the modal.
+ * @param preselectedCompanyId - Optional ID of a company to preselect inside the modal.
+ * @param variant - Visual style variant for the button; defaults to `'secondary'`.
+ * @returns The button and the associated Add Interaction modal UI.
+ */
 export function AddInteractionButton({ 
   preselectedPersonId,
   preselectedCompanyId,
