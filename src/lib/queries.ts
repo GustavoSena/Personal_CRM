@@ -44,6 +44,12 @@ export async function getPeople(): Promise<Person[]> {
   return data ?? []
 }
 
+/**
+ * Fetches a person record by identifier.
+ *
+ * @param id - The person ID (string or number)
+ * @returns The matching `Person` row, or `null` if no row is found or an error occurs
+ */
 export async function getPerson(id: string | number): Promise<Person | null> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
