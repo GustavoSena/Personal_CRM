@@ -11,6 +11,12 @@ interface PageProps {
   params: Promise<{ id: string }>
 }
 
+/**
+ * Renders the interaction detail page for a given interaction id.
+ *
+ * @param params - A promise that resolves to an object with the `id` string of the interaction to display.
+ * @returns The React element for the interaction detail page, or triggers a 404 response if the interaction cannot be found.
+ */
 export default async function InteractionPage({ params }: PageProps) {
   const { id } = await params
   const interaction = await getInteraction(id)

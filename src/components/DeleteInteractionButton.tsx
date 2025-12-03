@@ -11,6 +11,13 @@ interface DeleteInteractionButtonProps {
   title: string
 }
 
+/**
+ * Renders a button that deletes an interaction and its related interaction_people links from the database after a confirmation step.
+ *
+ * @param id - The numeric ID of the interaction to delete
+ * @param title - The human-readable title of the interaction
+ * @returns The component's React element
+ */
 export function DeleteInteractionButton({ id, title }: DeleteInteractionButtonProps) {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)

@@ -11,6 +11,15 @@ interface TopicsQuickAddProps {
   currentTopics: string[]
 }
 
+/**
+ * Render a UI for viewing, adding, and removing a person's skills/topics.
+ *
+ * Adds or removes topics from the displayed list and persists those changes to the `people` table's `skills_topics` field in the database, refreshing the router after successful updates. Shows inline loading states for add/remove operations.
+ *
+ * @param personId - The database `id` of the person whose topics are being managed
+ * @param currentTopics - The initial list of topics to display
+ * @returns A JSX element representing the skills & topics editor
+ */
 export function TopicsQuickAdd({ personId, currentTopics }: TopicsQuickAddProps) {
   const router = useRouter()
   const [topics, setTopics] = useState<string[]>(currentTopics)

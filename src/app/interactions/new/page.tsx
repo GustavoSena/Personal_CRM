@@ -24,6 +24,13 @@ interface Position {
   } | null
 }
 
+/**
+ * Client-side page that renders the New Interaction form inside a Suspense boundary.
+ *
+ * Renders a loading fallback while the NewInteractionContent component is loading.
+ *
+ * @returns The page element containing a Suspense wrapper with a loader fallback and the new interaction content.
+ */
 export default function NewInteractionPage() {
   return (
     <Suspense fallback={
@@ -36,6 +43,13 @@ export default function NewInteractionPage() {
   )
 }
 
+/**
+ * Renders the "New Interaction" page content: a form for creating an interaction with fields for title, date, place, position context, notes, and people involved.
+ *
+ * The component fetches people and the user's positions, supports pre-selecting a person via the `person_id` URL query, provides searchable selection of people, and saves a new interaction (and optional interaction_people links) to the backend when submitted.
+ *
+ * @returns The rendered JSX for the New Interaction form and its UI states (loading, error, saving).
+ */
 function NewInteractionContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
