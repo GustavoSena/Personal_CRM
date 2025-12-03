@@ -111,10 +111,8 @@ export default function LinkedInImportPage() {
     const positions: ScrapedPosition[] = []
     
     // Parse experience entries - only add if we have a real job title
-    console.log('Parsing experience:', profile.experience)
     if (profile.experience && Array.isArray(profile.experience)) {
       for (const exp of profile.experience) {
-        console.log('Experience entry:', exp)
         const companyName = exp.company || exp.company_name || exp.title
         const jobTitle = exp.title || exp.job_title || exp.position
         
@@ -336,7 +334,6 @@ export default function LinkedInImportPage() {
 
         // Extract discovered companies from current positions in the raw API data
         const discoveredMap = new Map<string, DiscoveredCompany>()
-        console.log('Extracting current companies from raw profiles')
         
         for (let i = 0; i < result.data.length; i++) {
           const rawProfile = result.data[i] as Record<string, unknown>
@@ -350,7 +347,6 @@ export default function LinkedInImportPage() {
           const companyName = (currentCompany?.name as string) || (rawProfile.current_company_name as string)
           
           if (!companyName) {
-            console.log('No current company for:', queuedProfile.person.name)
             continue
           }
           
@@ -361,7 +357,6 @@ export default function LinkedInImportPage() {
             ? `https://www.linkedin.com/company/${companySlug}` 
             : rawCompanyUrl || null
           
-          console.log('Current company:', companyName, 'URL:', linkedinUrl)
           
           const key = companyName.toLowerCase()
           if (!discoveredMap.has(key)) {
@@ -383,7 +378,6 @@ export default function LinkedInImportPage() {
         }
         
         const discoveredArray = Array.from(discoveredMap.values())
-        console.log('Discovered companies:', discoveredArray.length, discoveredArray)
         setDiscoveredCompanies(discoveredArray)
       } else {
         setError('No profile data returned. The profiles might be private or the URLs might be incorrect.')
@@ -403,12 +397,6 @@ export default function LinkedInImportPage() {
   const toggleCompanySelection = (index: number) => {
     setDiscoveredCompanies(prev => prev.map((c, i) => 
       i === index ? { ...c, selected: !c.selected } : c
-    ))
-  }
-
-  const selectAllNewCompanies = () => {
-    setDiscoveredCompanies(prev => prev.map(c => 
-      c.alreadyExists ? c : { ...c, selected: true }
     ))
   }
 
