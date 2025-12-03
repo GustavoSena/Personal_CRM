@@ -28,6 +28,16 @@ interface PageProps {
   params: Promise<{ id: string }>
 }
 
+/**
+ * Render the Edit Interaction page for a specific interaction.
+ *
+ * Renders a form populated from the interaction identified by the route `id`, allowing title, date,
+ * place, position context, participants, and notes to be edited; handles loading, validation,
+ * saving, and navigation back to the interaction detail view.
+ *
+ * @param params - Router params object that resolves to an object containing the interaction `id`
+ * @returns The page's React element displaying the interaction edit form and participant management UI
+ */
 export default function EditInteractionPage({ params }: PageProps) {
   const { id } = use(params)
   const router = useRouter()
