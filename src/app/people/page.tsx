@@ -6,6 +6,12 @@ import { getPeopleWithActivePositions, PersonWithActivePosition } from '@/lib/qu
 
 export const revalidate = 0
 
+/**
+ * Collects all unique skill topics from the provided people and returns them sorted alphabetically.
+ *
+ * @param people - Array of people whose `skills_topics` arrays will be aggregated
+ * @returns An alphabetically sorted array of unique skill topic strings
+ */
 function getAllTopics(people: PersonWithActivePosition[]) {
   const topicsSet = new Set<string>()
   people.forEach(p => p.skills_topics?.forEach((t: string) => topicsSet.add(t)))
@@ -17,12 +23,10 @@ interface PageProps {
 }
 
 /**
- * Renders the People page with topic filtering, import/add actions, and a list of person cards.
+ * Render the People page with topic filtering, import/add actions, and a list of person cards.
  *
- * Displays a topic filter, action buttons for importing from LinkedIn and adding a person, and a grid or empty state depending on filtered results. Selected topics from `searchParams` are used to filter the people shown.
- *
- * @param searchParams - A promise resolving to an object that may contain `topic` (a string or array of strings) representing selected topic(s) from the URL query.
- * @returns The page React element containing the people list, filters, and action controls.
+ * @param searchParams - URL query params; may include `topic` (string or string[] for selected topic(s)) and `q` (search query)
+ * @returns The page element displaying filters, action controls, and the filtered people list or an empty state
  */
 export default async function PeoplePage({ searchParams }: PageProps) {
   const people = await getPeopleWithActivePositions()

@@ -7,6 +7,12 @@ import { getCompanies, Company } from '@/lib/queries'
 
 export const revalidate = 0
 
+/**
+ * Collects all unique topic strings from the provided companies and returns them in sorted order.
+ *
+ * @param companies - Array of companies to extract topics from; companies without topics are ignored
+ * @returns A lexicographically sorted array of unique topic strings
+ */
 function getAllTopics(companies: Company[]) {
   const topicsSet = new Set<string>()
   companies.forEach(c => c.topics?.forEach(t => topicsSet.add(t)))
@@ -18,10 +24,10 @@ interface PageProps {
 }
 
 /**
- * Render the Companies page with a header, topic filter, and LinkedIn sync view.
+ * Render the Companies page with header actions, a topic filter, a search bar, and a LinkedIn sync view.
  *
- * @param searchParams - An object with an optional `topic` field used to determine selected topics; a string selects a single topic and an array selects multiple topics.
- * @returns A React element containing the page header with action links, a TopicFilter populated from all company topics, and a CompanyLinkedInSync view showing companies filtered by the selected topics.
+ * @param searchParams - Object with optional `topic` (string or string[]) to select topics and optional `q` to filter companies by name or website
+ * @returns The page React element displaying filtered companies and related UI (header actions, search, topic filter, and LinkedIn sync)
  */
 export default async function CompaniesPage({ searchParams }: PageProps) {
   const companies = await getCompanies()

@@ -9,10 +9,10 @@ interface SearchBarProps {
 }
 
 /**
- * A search input that updates URL query params for server-side filtering.
+ * Renders a search bar that syncs its value with the URL `q` query parameter and updates navigation when changed.
  *
- * @param placeholder - Placeholder text for the input field
- * @returns A search input with clear button
+ * @param placeholder - Placeholder text for the input; defaults to 'Search...'
+ * @returns The rendered search input element
  */
 export function SearchBar({ placeholder = 'Search...' }: SearchBarProps) {
   const router = useRouter()

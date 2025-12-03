@@ -52,11 +52,11 @@ interface DiscoveredCompany {
 }
 
 /**
- * Page component that provides a UI and workflow to import LinkedIn profiles, scrape their data, and persist people, companies, and positions to the database.
+ * Render the LinkedIn import interface and manage scraping, parsing, validation, and persistence of profiles, companies, and positions.
  *
- * The component accepts multiline LinkedIn profile URLs, normalizes and parses them, calls a scraping API, matches or creates company records, inserts people and position records, and exposes progress, error, and completion states in the UI.
+ * Manages user input of LinkedIn profile URLs, invokes the scraping API, matches or creates company records, inserts people and position rows, and exposes progress, error, and completion states for the UI.
  *
- * @returns A React element rendering the LinkedIn import interface and managing the import workflow.
+ * @returns A React element rendering the LinkedIn import page and its workflow UI
  */
 export default function LinkedInImportPage() {
   const router = useRouter()

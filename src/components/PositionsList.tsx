@@ -30,13 +30,14 @@ interface PositionsListProps {
 }
 
 /**
- * Render a list of positions with company details, tenure, and inline editing.
+ * Display a list of positions split into "Current" and "Past" sections with company info and inline editing.
  *
- * Positions are separated into Active (current) and Past sections, each sorted by start date (most recent first).
- * Each item displays a company logo (or placeholder), the position title, an optional link to the company, duration or date range, an edit button that opens an edit modal for that position, and an "Active" badge when applicable. If `positions` is empty, renders a placeholder message.
+ * Active (current) and past positions are separated and each section is sorted by start date, most recent first.
+ * Each position shows a company logo or placeholder, title, company link when available, a duration or date range,
+ * and an Edit button that opens an edit modal for that position. Saving or deleting from the modal refreshes the data.
  *
  * @param positions - The array of positions to display
- * @returns The rendered list of positions as a JSX element
+ * @returns A JSX element containing the positions list with "Current" and "Past" sections, or a placeholder message when the list is empty
  */
 export function PositionsList({ positions }: PositionsListProps) {
   const router = useRouter()
