@@ -80,17 +80,32 @@ export default function LinkedInImportPage() {
     return data || []
   }
 
-  // Find matching company from existing ones
-  const findMatchingCompany = (companyName: string, companies: ExistingCompany[]): number | null => {
-    const match = companies.find(c => 
-      c.name.toLowerCase() === companyName.toLowerCase() ||
-      c.name.toLowerCase().includes(companyName.toLowerCase()) ||
-      companyName.toLowerCase().includes(c.name.toLowerCase())
-    )
-    return match?.id || null
+  // Find matching company from existing ones (by LinkedIn slug or name)
+  const findMatchingCompany = (companyName: string, linkedinUrl: string | null, companies: ExistingCompany[]): ExistingCompany | null => {
+    const normalizedName = companyName.trim().toLowerCase()
+    
+    // First try to match by LinkedIn URL slug (most reliable)
+    const inputSlug = getCompanySlug(linkedinUrl)
+    if (inputSlug) {
+      const urlMatch = companies.find(c => {
+        const existingSlug = getCompanySlug(c.linkedin_url)
+        return existingSlug && existingSlug === inputSlug
+      })
+      if (urlMatch) {
+        return urlMatch
+      }
+    }
+    
+    // Then try to match by name
+    const nameMatch = companies.find(c => {
+      const existingName = c.name.trim().toLowerCase()
+      return existingName === normalizedName ||
+        existingName.includes(normalizedName) ||
+        normalizedName.includes(existingName)
+    })
+    
+    return nameMatch || null
   }
-
-
 
   // Parse profile data into our format
   const parseProfile = (profile: Record<string, unknown>, url: string, companies: ExistingCompany[]): QueuedProfile => {
@@ -137,7 +152,7 @@ export default function LinkedInImportPage() {
           description: exp.description_html || exp.description || null,
           isCurrent: positions.length === 0,
           selected: true,
-          existingCompanyId: findMatchingCompany(companyName, companies)
+          existingCompanyId: findMatchingCompany(companyName, canonicalCompanyUrl, companies)?.id || null
         })
       }
     }
@@ -166,7 +181,7 @@ export default function LinkedInImportPage() {
           description: null,
           isCurrent: true,
           selected: true,
-          existingCompanyId: findMatchingCompany(currentCompanyName, companies)
+          existingCompanyId: findMatchingCompany(currentCompanyName, canonicalCompanyUrl, companies)?.id || null
         })
       }
     }
@@ -288,10 +303,8 @@ export default function LinkedInImportPage() {
               let companyId = pos.existingCompanyId
 
               if (!companyId) {
-                // Check if we already created this company in this batch
-                const existingInBatch = updatedCompanies.find(c => 
-                  c.name.toLowerCase() === pos.company.toLowerCase()
-                )
+                // Check if we already created this company in this batch (by URL or name)
+                const existingInBatch = findMatchingCompany(pos.company, pos.companyLinkedInUrl, updatedCompanies)
                 if (existingInBatch) {
                   companyId = existingInBatch.id
                 } else {
@@ -360,24 +373,24 @@ export default function LinkedInImportPage() {
           
           const key = companyName.toLowerCase()
           if (!discoveredMap.has(key)) {
-            const existingCompany = updatedCompanies.find(c => 
-              c.name.toLowerCase() === key
-            )
-            const existedBeforeImport = companies.some(c =>
-              c.name.toLowerCase() === key
-            )
+            // Use findMatchingCompany to check both URL and name
+            const existingCompany = findMatchingCompany(companyName, linkedinUrl, updatedCompanies)
+            const existedBeforeImport = findMatchingCompany(companyName, linkedinUrl, companies) !== null
+            
             discoveredMap.set(key, {
               name: companyName,
               linkedinUrl,
               fromCurrentPosition: true,
               alreadyExists: existedBeforeImport,
               existingId: existingCompany?.id,
-              selected: !!linkedinUrl // Pre-select if has URL
+              selected: !!linkedinUrl && !existedBeforeImport // Pre-select if has URL and is new
             })
           }
         }
         
-        const discoveredArray = Array.from(discoveredMap.values())
+        // Only show companies that are NEW (didn't exist before this import)
+        const discoveredArray = Array.from(discoveredMap.values()).filter(c => !c.alreadyExists)
+        console.log('[Discovered Companies] Total:', discoveredMap.size, 'New:', discoveredArray.length)
         setDiscoveredCompanies(discoveredArray)
       } else {
         setError('No profile data returned. The profiles might be private or the URLs might be incorrect.')
@@ -418,38 +431,60 @@ export default function LinkedInImportPage() {
         })
 
         const result = await response.json()
+        console.log('[handleImportCompanies] Scrape result:', result)
         
         if (response.ok && result.data) {
+          // Re-fetch companies from DB to get current state
+          const currentCompanies = await fetchExistingCompanies()
+          
           // Update companies with scraped data (logo, website, etc.)
           for (const companyData of result.data) {
             const inputUrl =
               (companyData.input_url as string | undefined) ??
               (companyData.url as string | undefined) ??
               null
+            
+            const scrapedName = (companyData.name as string) || ''
+            console.log(`[handleImportCompanies] Processing: ${scrapedName} (${inputUrl})`)
 
-            // Find the discovered company to get its existingId
+            // Find the discovered company
             const discovered = discoveredCompanies.find(
               c => c.linkedinUrl === inputUrl
             )
-
-            if (discovered?.existingId && companyData.logo) {
-              const companyId = discovered.existingId
-              const url = discovered.linkedinUrl || inputUrl
-
+            
+            // Try to find existing company by URL slug or name
+            const companyName = discovered?.name || scrapedName
+            const existingCompany = findMatchingCompany(companyName, inputUrl, currentCompanies)
+            
+            if (existingCompany) {
+              // Update existing company
+              console.log(`[handleImportCompanies] Updating existing company: ${existingCompany.name} (id: ${existingCompany.id})`)
               try {
                 await supabase
                   .from('companies')
                   .update({
-                    logo_url: companyData.logo,
+                    logo_url: companyData.logo || null,
+                    website: companyData.website || null,
+                    linkedin_url: inputUrl, // Also update LinkedIn URL if missing
+                  })
+                  .eq('id', existingCompany.id)
+              } catch (updateErr) {
+                console.error('Error updating company:', updateErr)
+              }
+            } else if (companyName) {
+              // Create new company
+              console.log(`[handleImportCompanies] Creating new company: ${companyName}`)
+              try {
+                await supabase
+                  .from('companies')
+                  .insert({
+                    name: companyName,
+                    linkedin_url: inputUrl,
+                    logo_url: companyData.logo || null,
                     website: companyData.website || null,
                   })
-                  .eq('id', companyId)
-              } catch (updateErr) {
-                console.error('Error updating company from LinkedIn data', {
-                  companyId,
-                  url,
-                  error: updateErr,
-                })
+              } catch (insertErr) {
+                console.error('Error creating company:', insertErr)
               }
             }
           }
