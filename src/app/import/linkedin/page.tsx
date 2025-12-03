@@ -422,22 +422,39 @@ export default function LinkedInImportPage() {
         if (response.ok && result.data) {
           // Update companies with scraped data (logo, website, etc.)
           for (const companyData of result.data) {
-            const inputUrl = companyData.input_url || companyData.url
+            const inputUrl =
+              (companyData.input_url as string | undefined) ??
+              (companyData.url as string | undefined) ??
+              null
+
             // Find the discovered company to get its existingId
-            const discovered = discoveredCompanies.find(c => 
-              c.linkedinUrl === inputUrl
+            const discovered = discoveredCompanies.find(
+              c => c.linkedinUrl === inputUrl
             )
+
             if (discovered?.existingId && companyData.logo) {
-              await supabase
-                .from('companies')
-                .update({ 
-                  logo_url: companyData.logo,
-                  website: companyData.website || null
+              const companyId = discovered.existingId
+              const url = discovered.linkedinUrl || inputUrl
+
+              try {
+                await supabase
+                  .from('companies')
+                  .update({
+                    logo_url: companyData.logo,
+                    website: companyData.website || null,
+                  })
+                  .eq('id', companyId)
+              } catch (updateErr) {
+                console.error('Error updating company from LinkedIn data', {
+                  companyId,
+                  url,
+                  error: updateErr,
                 })
-                .eq('id', discovered.existingId)
+              }
             }
           }
         }
+
       }
 
       // Mark companies as processed (deselect them)
