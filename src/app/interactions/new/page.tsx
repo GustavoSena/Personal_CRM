@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Plus, Loader2, Calendar, MapPin, Briefcase, User, X, Search } from 'lucide-react'
@@ -25,6 +25,18 @@ interface Position {
 }
 
 export default function NewInteractionPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
+      </div>
+    }>
+      <NewInteractionContent />
+    </Suspense>
+  )
+}
+
+function NewInteractionContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const preselectedPersonId = searchParams.get('person_id')
