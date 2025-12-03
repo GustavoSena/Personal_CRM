@@ -22,6 +22,10 @@ export type PositionWithRelations = Position & {
   companies: Company | null
 }
 
+export type PersonWithActivePosition = Person & {
+  hasActivePosition: boolean
+}
+
 // ============================================================================
 // People Queries
 // ============================================================================
@@ -50,6 +54,41 @@ export async function getPerson(id: string | number): Promise<Person | null> {
 
   if (error) return null
   return data
+}
+
+/**
+ * Fetches all people with a flag indicating if they have any active position.
+ *
+ * @returns An array of people with a `hasActivePosition` boolean field
+ */
+export async function getPeopleWithActivePositions(): Promise<PersonWithActivePosition[]> {
+  const supabase = await createServerSupabaseClient()
+  
+  // Get all people
+  const { data: people, error: peopleError } = await supabase
+    .from('people')
+    .select('*')
+    .order('name')
+
+  if (peopleError || !people) {
+    console.error('Error fetching people:', peopleError?.message)
+    return []
+  }
+
+  // Get all active positions grouped by person_id
+  const { data: activePositions } = await supabase
+    .from('positions')
+    .select('person_id')
+    .eq('active', true)
+
+  const personIdsWithActivePositions = new Set(
+    (activePositions ?? []).map(p => p.person_id)
+  )
+
+  return people.map(person => ({
+    ...person,
+    hasActivePosition: personIdsWithActivePositions.has(person.id)
+  }))
 }
 
 /**

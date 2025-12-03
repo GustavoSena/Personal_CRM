@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Search, Loader2, ChevronRight, CheckCircle2, AlertCircle, XCircle } from 'lucide-react'
+import { ArrowLeft, Search, Loader2, ChevronRight, CheckCircle2, AlertCircle, XCircle, Building2, ExternalLink } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { getCompanySlug, getLinkedInProfileSlug, parseLinkedInProfileUrls } from '@/lib/utils'
 import { validateParsedProfile, isBrightDataProfileValid } from '@/lib/linkedin-validation'
@@ -42,6 +42,15 @@ interface ExistingCompany {
   linkedin_url: string | null
 }
 
+interface DiscoveredCompany {
+  name: string
+  linkedinUrl: string | null
+  fromCurrentPosition: boolean
+  alreadyExists: boolean
+  existingId?: number
+  selected: boolean
+}
+
 /**
  * Page component that provides a UI and workflow to import LinkedIn profiles, scrape their data, and persist people, companies, and positions to the database.
  *
@@ -56,6 +65,8 @@ export default function LinkedInImportPage() {
   const [error, setError] = useState<string | null>(null)
   const [queue, setQueue] = useState<QueuedProfile[]>([])
   const [existingCompanies, setExistingCompanies] = useState<ExistingCompany[]>([])
+  const [discoveredCompanies, setDiscoveredCompanies] = useState<DiscoveredCompany[]>([])
+  const [importingCompanies, setImportingCompanies] = useState(false)
 
   const savedCount = queue.filter(q => q.status === 'saved').length
   const skippedCount = queue.filter(q => q.status === 'skipped' || q.status === 'error').length
@@ -100,13 +111,18 @@ export default function LinkedInImportPage() {
     const positions: ScrapedPosition[] = []
     
     // Parse experience entries - only add if we have a real job title
+    console.log('Parsing experience:', profile.experience)
     if (profile.experience && Array.isArray(profile.experience)) {
       for (const exp of profile.experience) {
-        const companyName = exp.company || exp.title
-        const jobTitle = exp.title !== companyName ? exp.title : null
+        console.log('Experience entry:', exp)
+        const companyName = exp.company || exp.company_name || exp.title
+        const jobTitle = exp.title || exp.job_title || exp.position
         
-        // Skip if no valid job title (we don't want generic "Position" entries)
-        if (!companyName || !jobTitle) continue
+        // Skip if no valid company name or job title
+        if (!companyName || !jobTitle || companyName === jobTitle) {
+          console.log('Skipping - company:', companyName, 'title:', jobTitle)
+          continue
+        }
         
         const rawCompanyUrl = (exp as any).company_url as string | undefined
         const companySlug = getCompanySlug(rawCompanyUrl)
@@ -317,6 +333,58 @@ export default function LinkedInImportPage() {
 
         setQueue(profiles)
         setExistingCompanies(updatedCompanies)
+
+        // Extract discovered companies from current positions in the raw API data
+        const discoveredMap = new Map<string, DiscoveredCompany>()
+        console.log('Extracting current companies from raw profiles')
+        
+        for (let i = 0; i < result.data.length; i++) {
+          const rawProfile = result.data[i] as Record<string, unknown>
+          const queuedProfile = profiles[i]
+          
+          // Only process saved profiles
+          if (queuedProfile.status !== 'saved') continue
+          
+          // Get current company info from raw data
+          const currentCompany = rawProfile.current_company as Record<string, unknown> | undefined
+          const companyName = (currentCompany?.name as string) || (rawProfile.current_company_name as string)
+          
+          if (!companyName) {
+            console.log('No current company for:', queuedProfile.person.name)
+            continue
+          }
+          
+          // Get and format company URL
+          const rawCompanyUrl = (currentCompany?.link as string) || (currentCompany?.url as string)
+          const companySlug = getCompanySlug(rawCompanyUrl)
+          const linkedinUrl = companySlug 
+            ? `https://www.linkedin.com/company/${companySlug}` 
+            : rawCompanyUrl || null
+          
+          console.log('Current company:', companyName, 'URL:', linkedinUrl)
+          
+          const key = companyName.toLowerCase()
+          if (!discoveredMap.has(key)) {
+            const existingCompany = updatedCompanies.find(c => 
+              c.name.toLowerCase() === key
+            )
+            const existedBeforeImport = companies.some(c =>
+              c.name.toLowerCase() === key
+            )
+            discoveredMap.set(key, {
+              name: companyName,
+              linkedinUrl,
+              fromCurrentPosition: true,
+              alreadyExists: existedBeforeImport,
+              existingId: existingCompany?.id,
+              selected: !!linkedinUrl // Pre-select if has URL
+            })
+          }
+        }
+        
+        const discoveredArray = Array.from(discoveredMap.values())
+        console.log('Discovered companies:', discoveredArray.length, discoveredArray)
+        setDiscoveredCompanies(discoveredArray)
       } else {
         setError('No profile data returned. The profiles might be private or the URLs might be incorrect.')
       }
@@ -331,6 +399,73 @@ export default function LinkedInImportPage() {
   const handleFinish = () => {
     router.push('/people')
   }
+
+  const toggleCompanySelection = (index: number) => {
+    setDiscoveredCompanies(prev => prev.map((c, i) => 
+      i === index ? { ...c, selected: !c.selected } : c
+    ))
+  }
+
+  const selectAllNewCompanies = () => {
+    setDiscoveredCompanies(prev => prev.map(c => 
+      c.alreadyExists ? c : { ...c, selected: true }
+    ))
+  }
+
+  const handleImportCompanies = async () => {
+    const toImport = discoveredCompanies.filter(c => c.selected && c.linkedinUrl)
+    if (toImport.length === 0) return
+
+    setImportingCompanies(true)
+    try {
+      // Build URLs for companies that have LinkedIn URLs
+      const companyUrls = toImport.map(c => c.linkedinUrl as string)
+
+      if (companyUrls.length > 0) {
+        // Scrape company data from Bright Data
+        const response = await fetch('/api/scrape-linkedin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ urls: companyUrls, type: 'company' })
+        })
+
+        const result = await response.json()
+        
+        if (response.ok && result.data) {
+          // Update companies with scraped data (logo, website, etc.)
+          for (const companyData of result.data) {
+            const inputUrl = companyData.input_url || companyData.url
+            // Find the discovered company to get its existingId
+            const discovered = discoveredCompanies.find(c => 
+              c.linkedinUrl === inputUrl
+            )
+            if (discovered?.existingId && companyData.logo) {
+              await supabase
+                .from('companies')
+                .update({ 
+                  logo_url: companyData.logo,
+                  website: companyData.website || null
+                })
+                .eq('id', discovered.existingId)
+            }
+          }
+        }
+      }
+
+      // Mark companies as processed (deselect them)
+      setDiscoveredCompanies(prev => prev.map(c => 
+        c.selected ? { ...c, selected: false } : c
+      ))
+    } catch (err) {
+      console.error('Error importing companies:', err)
+      setError('Failed to import some companies')
+    } finally {
+      setImportingCompanies(false)
+    }
+  }
+
+  const companiesWithUrlCount = discoveredCompanies.filter(c => c.linkedinUrl).length
+  const selectedCount = discoveredCompanies.filter(c => c.selected && c.linkedinUrl).length
 
   return (
     <div>
@@ -442,6 +577,92 @@ export default function LinkedInImportPage() {
                     {profile.person.headline && (
                       <span className="text-sm text-gray-500 dark:text-gray-400 truncate">
                         — {profile.person.headline}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Discovered Companies from Current Positions */}
+          {discoveredCompanies.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-green-600" />
+                  Companies from Current Positions
+                </h3>
+                {companiesWithUrlCount > 0 && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setDiscoveredCompanies(prev => prev.map(c => c.linkedinUrl ? { ...c, selected: true } : c))}
+                      className="text-sm text-blue-600 hover:text-blue-700"
+                    >
+                      Select all
+                    </button>
+                    <button
+                      onClick={handleImportCompanies}
+                      disabled={importingCompanies || selectedCount === 0}
+                      className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {importingCompanies ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Building2 className="w-4 h-4" />
+                      )}
+                      Fetch Company Data ({selectedCount})
+                    </button>
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                These companies were found from people&apos;s current positions. You can fetch additional data (logo, website) from LinkedIn.
+              </p>
+              <div className="space-y-2">
+                {discoveredCompanies.map((company, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex items-center gap-3 p-3 rounded-lg border ${
+                      company.linkedinUrl
+                        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                        : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'
+                    }`}
+                  >
+                    {company.linkedinUrl && (
+                      <input
+                        type="checkbox"
+                        checked={company.selected}
+                        onChange={() => toggleCompanySelection(idx)}
+                        className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                      />
+                    )}
+                    <Building2 className={`w-5 h-5 flex-shrink-0 ${
+                      company.linkedinUrl ? 'text-blue-600' : 'text-gray-400'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {company.name}
+                      </p>
+                      {company.linkedinUrl && (
+                        <a
+                          href={company.linkedinUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          {company.linkedinUrl}
+                        </a>
+                      )}
+                    </div>
+                    {company.linkedinUrl ? (
+                      <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded">
+                        Has URL
+                      </span>
+                    ) : (
+                      <span className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 rounded">
+                        No URL
                       </span>
                     )}
                   </div>

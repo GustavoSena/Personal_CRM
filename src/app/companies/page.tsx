@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Plus, Import } from 'lucide-react'
 import { TopicFilter } from '@/components/TopicFilter'
+import { SearchBar } from '@/components/SearchBar'
 import { CompanyLinkedInSync } from '@/components/CompanyLinkedInSync'
 import { getCompanies, Company } from '@/lib/queries'
 
@@ -13,7 +14,7 @@ function getAllTopics(companies: Company[]) {
 }
 
 interface PageProps {
-  searchParams: Promise<{ topic?: string | string[] }>
+  searchParams: Promise<{ topic?: string | string[]; q?: string }>
 }
 
 /**
@@ -34,11 +35,23 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
       ? [resolvedParams.topic] 
       : []
   
-  const filteredCompanies = selectedTopics.length > 0
-    ? companies.filter(c => 
-        c.topics?.some(t => selectedTopics.includes(t))
-      )
-    : companies
+  const searchQuery = resolvedParams.q?.toLowerCase() || ''
+
+  // Filter by search query and topics
+  let filteredCompanies = companies
+  
+  if (searchQuery) {
+    filteredCompanies = filteredCompanies.filter((c: Company) => 
+      c.name.toLowerCase().includes(searchQuery) ||
+      c.website?.toLowerCase().includes(searchQuery)
+    )
+  }
+  
+  if (selectedTopics.length > 0) {
+    filteredCompanies = filteredCompanies.filter((c: Company) => 
+      c.topics?.some((t: string) => selectedTopics.includes(t))
+    )
+  }
 
   return (
     <div>
@@ -47,21 +60,26 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
         <div className="flex flex-wrap gap-2">
           <Link
             href="/import/linkedin-companies"
-            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-[#0077B5] text-white text-sm font-medium rounded-lg hover:bg-[#006097] transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-[#0077B5] text-white text-sm font-medium rounded-lg hover:bg-[#006097] transition-colors whitespace-nowrap"
           >
-            <Import className="w-4 h-4 sm:mr-2" />
+            <Import className="w-4 h-4" />
             <span className="hidden sm:inline">Import from LinkedIn</span>
             <span className="sm:hidden">Import</span>
           </Link>
           <Link
             href="/companies/new"
-            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap"
           >
-            <Plus className="w-4 h-4 sm:mr-2" />
+            <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Add Company</span>
             <span className="sm:hidden">Add</span>
           </Link>
         </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-4">
+        <SearchBar placeholder="Search companies by name or website..." />
       </div>
 
       <TopicFilter topics={allTopics} selectedTopics={selectedTopics} colorScheme="green" />
