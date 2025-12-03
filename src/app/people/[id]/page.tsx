@@ -6,6 +6,7 @@ import { AddExperienceButton } from '@/components/AddExperienceButton'
 import { AddInteractionButton } from '@/components/AddInteractionButton'
 import { SetMyProfileButton } from '@/components/SetMyProfileButton'
 import { PositionsList } from '@/components/PositionsList'
+import { TopicsQuickAdd } from '@/components/TopicsQuickAdd'
 import { getPerson, getPersonPositions, getPersonInteractions } from '@/lib/queries'
 import { formatDateForDisplay } from '@/lib/utils'
 
@@ -146,22 +147,11 @@ export default async function PersonPage({ params }: PageProps) {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Skills/Topics */}
-          {person.skills_topics && person.skills_topics.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Skills & Topics</h2>
-              <div className="flex flex-wrap gap-2">
-                {person.skills_topics.map((topic) => (
-                  <span
-                    key={topic}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                  >
-                    {topic}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Skills/Topics - Quick Add */}
+          <TopicsQuickAdd 
+            personId={person.id} 
+            currentTopics={person.skills_topics ?? []} 
+          />
 
           {/* Interactions */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">

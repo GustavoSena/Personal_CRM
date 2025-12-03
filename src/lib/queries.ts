@@ -274,6 +274,43 @@ export async function getInteractions() {
   return data ?? []
 }
 
+export type InteractionWithDetails = Interaction & {
+  my_position?: {
+    id: number
+    title: string
+    companies: { id: number; name: string } | null
+  } | null
+  interaction_people?: Array<{
+    person_id: number
+    people: Person | null
+  }>
+}
+
+/**
+ * Fetches a single interaction by id, including its related people and position details.
+ *
+ * @param id - Interaction id as a number or numeric string
+ * @returns The interaction with nested `interaction_people` (each includes `people`) and `my_position` (includes `id`, `title`, and `companies`), or `null` if not found or an error occurs
+ */
+export async function getInteraction(id: string | number): Promise<InteractionWithDetails | null> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from('interactions')
+    .select(`
+      *,
+      interaction_people(person_id, people(*)),
+      my_position:positions(id, title, companies(id, name))
+    `)
+    .eq('id', typeof id === 'string' ? parseInt(id) : id)
+    .single()
+
+  if (error) {
+    console.error('Error fetching interaction:', error.message)
+    return null
+  }
+  return data as InteractionWithDetails
+}
+
 // ============================================================================
 // Stats / Dashboard Queries
 /**
