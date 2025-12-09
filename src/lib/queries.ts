@@ -286,6 +286,12 @@ export type InteractionWithDetails = Interaction & {
   }>
 }
 
+/**
+ * Fetches a single interaction by id, including its related people and position details.
+ *
+ * @param id - Interaction id as a number or numeric string
+ * @returns The interaction with nested `interaction_people` (each includes `people`) and `my_position` (includes `id`, `title`, and `companies`), or `null` if not found or an error occurs
+ */
 export async function getInteraction(id: string | number): Promise<InteractionWithDetails | null> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
